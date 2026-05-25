@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>医療MAP リニューアルWebアプリ試作</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="#home" aria-label="医療MAP ホーム">
+      <span class="brand-mark">+</span>
+      <span>
+        <strong>医療MAP</strong>
+        <small>東海の医療機関を確認日つきで探せる</small>
+      </span>
+    </a>
+    <nav class="header-actions" aria-label="主要メニュー">
+      <a href="#results">検索結果</a>
+      <a href="#detail">詳細</a>
+      <button class="ghost-button" type="button" data-open-panel="backstage">提案メニュー</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-copy">
+        <p class="eyebrow">Googleマップではなく、受診先を決めるための地域医療ナビ</p>
+        <h1>今日行ける病院を、地域からすぐ探す。</h1>
+        <p class="lead">診療科目、地域、現在地、休日診療をひとつの画面に整理。電話・地図・診療時間まで迷わず進めるシンプルなWebアプリ案です。</p>
+      </div>
+
+      <section class="search-surface" aria-label="病院検索">
+        <label class="search-label" for="main-search">地域・診療科目・病院名</label>
+        <div class="search-row">
+          <input id="main-search" type="search" placeholder="例: 千種区 内科 / 名古屋駅 歯科" value="名古屋市千種区 内科">
+          <button type="button" data-action="run-search">検索</button>
+        </div>
+        <div class="quick-grid" aria-label="クイック検索">
+          <button type="button" data-chip="現在地">現在地</button>
+          <button type="button" data-chip="内科">内科</button>
+          <button type="button" data-chip="小児科">小児科</button>
+          <button type="button" data-chip="歯科">歯科</button>
+          <button type="button" data-chip="休日診療">休日診療</button>
+        </div>
+        <div class="area-strip" aria-label="地域">
+          <a href="#results">名古屋市</a>
+          <a href="#results">愛知県</a>
+          <a href="#results">三重県</a>
+          <a href="#results">静岡県</a>
+          <a href="#results">岐阜県</a>
+        </div>
+      </section>
+    </section>
+
+    <section class="trust-band" aria-label="医療MAPの特徴">
+      <article>
+        <span class="icon-badge">確</span>
+        <h2>最終確認日を表示</h2>
+        <p>口コミ点数だけでなく、情報がいつ確認されたかを見せます。</p>
+      </article>
+      <article>
+        <span class="icon-badge">電</span>
+        <h2>電話・地図を最短導線に</h2>
+        <p>迷っている人がすぐ連絡できるように、主要操作を固定します。</p>
+      </article>
+      <article>
+        <span class="icon-badge">地</span>
+        <h2>東海エリア特化</h2>
+        <p>地域の紙媒体・現地確認の強みをWebアプリに引き継ぎます。</p>
+      </article>
+    </section>
+
+    <section class="app-layout" id="results">
+      <div class="section-heading">
+        <p class="eyebrow">検索結果</p>
+        <h2>名古屋市千種区の内科</h2>
+        <p>85件中、サンプル3件を表示。カードごとに電話・地図・詳細へ進めます。</p>
+      </div>
+
+      <div class="result-toolbar">
+        <button class="active" type="button">本日診療</button>
+        <button type="button">駐車場あり</button>
+        <button type="button">駅近</button>
+        <button type="button">夜間診療</button>
+        <button type="button">写真あり</button>
+      </div>
+
+      <div class="results-grid" id="clinic-list"></div>
+    </section>
+
+    <section class="detail-shell" id="detail">
+      <div class="section-heading">
+        <p class="eyebrow">施設詳細</p>
+        <h2>千種内科クリニック</h2>
+        <p>基本情報、診療時間、確認日、修正依頼を1画面に整理します。</p>
+      </div>
+
+      <div class="detail-card">
+        <div class="photo-grid" aria-label="施設写真">
+          <div class="clinic-photo primary"></div>
+          <div class="clinic-photo small"></div>
+          <div class="clinic-photo small second"></div>
+        </div>
+        <div class="detail-body">
+          <div class="status-row">
+            <span class="status open">診療中</span>
+            <span>18:30まで</span>
+            <span>最終確認日 2026.05</span>
+          </div>
+          <h3>千種内科クリニック</h3>
+          <p class="clinic-meta">内科・循環器内科・小児科 / 愛知県名古屋市千種区今池1-2-3</p>
+          <div class="cta-row">
+            <a class="primary-cta" href="tel:0521234567">電話する</a>
+            <a href="https://maps.google.com/" target="_blank" rel="noreferrer">地図を見る</a>
+            <a href="#" aria-disabled="true">公式サイト</a>
+          </div>
+          <table class="time-table" aria-label="診療時間">
+            <thead>
+              <tr><th></th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th><th>日</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>9:00-12:30</th><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td><td>▲</td><td>休</td></tr>
+              <tr><th>15:30-18:30</th><td>●</td><td>●</td><td>●</td><td>休</td><td>●</td><td>休</td><td>休</td></tr>
+            </tbody>
+          </table>
+          <div class="info-list">
+            <p><strong>住所</strong><span>愛知県名古屋市千種区今池1-2-3 今池ビル2階</span></p>
+            <p><strong>電話</strong><span>052-123-4567</span></p>
+            <p><strong>休診日</strong><span>木曜午後・土曜午後・日曜・祝日</span></p>
+          </div>
+          <button class="correction-button" type="button">掲載情報の修正を依頼する</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="concept-section">
+      <div class="section-heading">
+        <p class="eyebrow">デザイン方向性</p>
+        <h2>シンプルなWebアプリUI</h2>
+        <p>トップは検索、結果はカード、詳細は診療時間と電話導線を優先します。</p>
+      </div>
+      <img src="./assets/ui-simple-concept.png" alt="医療MAP シンプルUIコンセプト">
+    </section>
+  </main>
+
+  <aside class="panel" id="backstage" aria-hidden="true" aria-label="提案メニュー">
+    <div class="panel-overlay" data-close-panel></div>
+    <div class="panel-content">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">裏メニュー</p>
+          <h2>お客様説明用メモ</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-panel aria-label="閉じる">×</button>
+      </div>
+
+      <nav class="panel-tabs" aria-label="提案資料タブ">
+        <button class="active" type="button" data-tab="summary">要点</button>
+        <button type="button" data-tab="audit">URL監査</button>
+        <button type="button" data-tab="difference">差別化</button>
+        <button type="button" data-tab="migration">移行</button>
+      </nav>
+
+      <section class="tab-panel active" data-tab-panel="summary">
+        <h3>提案の中心</h3>
+        <p>LPではなく、トップから検索できるWebアプリにする。掲載営業ページは別導線に分け、一般利用者には「すぐ探せる」体験を優先する。</p>
+        <div class="memo-grid">
+          <article><strong>主価値</strong><span>東海の医療機関を確認日つきで探せる</span></article>
+          <article><strong>ユーザー</strong><span>近所で今受診先を探している一般利用者</span></article>
+          <article><strong>医療機関側</strong><span>情報更新・掲載強化・写真掲載の営業導線</span></article>
+        </div>
+        <img src="./assets/current-home-mobile.png" alt="現行スマホ表示" class="mini-shot">
+      </section>
+
+      <section class="tab-panel" data-tab-panel="audit">
+        <h3>既存URL接続確認</h3>
+        <ul class="check-list">
+          <li>サイトマップ由来 4,770 URL を確認</li>
+          <li>接続OK 4,763件</li>
+          <li>404 7件</li>
+          <li>リダイレクト 8件</li>
+          <li>多くのページが PHP/5.2.4、1件のみ PHP/4.4.7</li>
+        </ul>
+        <p class="warning">HTTPS証明書不一致は別途確認済み。フォームを扱うため、SSL移行は最優先。</p>
+        <div class="report-links">
+          <a href="./reports/url_check_report.html" target="_blank">HTMLレポートを見る</a>
+          <a href="./reports/url_check_results.csv" download>全結果CSV</a>
+          <a href="./reports/urls_from_sitemaps.csv" download>URL一覧CSV</a>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="difference">
+        <h3>Googleマップ・他サイトとの違い</h3>
+        <div class="compare-table">
+          <p><strong>Googleマップ</strong><span>場所・経路・口コミに強い。医療MAPは「受診先を決める」情報を整理する。</span></p>
+          <p><strong>医療情報ネット</strong><span>公式で網羅性が強い。医療MAPは地域ユーザー向けに簡単に見せる。</span></p>
+          <p><strong>EPARK</strong><span>予約・受付に強い。医療MAPは地域情報と電話導線に集中する。</span></p>
+          <p><strong>Caloo</strong><span>口コミに強い。医療MAPは確認日・地域密着を主軸にする。</span></p>
+          <p><strong>ドクターズ・ファイル</strong><span>取材記事に強い。医療MAPは一覧検索と生活目線フィルタを強化する。</span></p>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="migration">
+        <h3>移行で守ること</h3>
+        <ul class="check-list">
+          <li>旧URLを可能な限り301または互換URLで引き継ぐ</li>
+          <li>PC用とスマホ用URLを統合し、canonicalを整理する</li>
+          <li>404の7件は移行前に削除・復旧・リダイレクト方針を決める</li>
+          <li>施設詳細には構造化データ、最終確認日、修正依頼導線を入れる</li>
+          <li>掲載希望LPはWebアプリ本体とは別導線にする</li>
+        </ul>
+        <a class="wide-link" href="./reports/renewal_ui_direction.md" target="_blank">UI方向性メモを開く</a>
+      </section>
+    </div>
+  </aside>
+
+  <footer class="site-footer">
+    <span>医療MAP リニューアル試作</span>
+    <button type="button" data-open-panel="backstage">提案メニューを開く</button>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
