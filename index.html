@@ -36,14 +36,14 @@
         <label class="search-label" for="main-search">地域・診療科目・病院名</label>
         <div class="search-row">
           <input id="main-search" type="search" placeholder="例: 千種区 内科 / 名古屋駅 歯科" value="名古屋市千種区 内科">
-          <button type="button" data-action="run-search">検索</button>
+          <button class="generated-button search-submit" type="button" data-action="run-search" aria-label="検索"><span class="visually-hidden">検索</span></button>
         </div>
         <div class="quick-grid" aria-label="クイック検索">
-          <button type="button" data-chip="現在地">現在地</button>
-          <button type="button" data-chip="内科">内科</button>
-          <button type="button" data-chip="小児科">小児科</button>
-          <button type="button" data-chip="歯科">歯科</button>
-          <button type="button" data-chip="休日診療">休日診療</button>
+          <button class="generated-tile tile-current" type="button" data-chip="現在地"><span>現在地</span></button>
+          <button class="generated-tile tile-internal" type="button" data-chip="内科"><span>内科</span></button>
+          <button class="generated-tile tile-pediatrics" type="button" data-chip="小児科"><span>小児科</span></button>
+          <button class="generated-tile tile-dentistry" type="button" data-chip="歯科"><span>歯科</span></button>
+          <button class="generated-tile tile-holiday" type="button" data-chip="休日診療"><span>休日診療</span></button>
         </div>
         <div class="area-strip" aria-label="地域">
           <a href="#results">名古屋市</a>
@@ -57,17 +57,17 @@
 
     <section class="trust-band" aria-label="医療MAPの特徴">
       <article>
-        <span class="icon-badge">確</span>
+        <span class="icon-badge generated-mini mini-record" aria-hidden="true"></span>
         <h2>最終確認日を表示</h2>
         <p>口コミ点数だけでなく、情報がいつ確認されたかを見せます。</p>
       </article>
       <article>
-        <span class="icon-badge">電</span>
+        <span class="icon-badge generated-mini mini-phone" aria-hidden="true"></span>
         <h2>電話・地図を最短導線に</h2>
         <p>迷っている人がすぐ連絡できるように、主要操作を固定します。</p>
       </article>
       <article>
-        <span class="icon-badge">地</span>
+        <span class="icon-badge generated-mini mini-map" aria-hidden="true"></span>
         <h2>東海エリア特化</h2>
         <p>地域の紙媒体・現地確認の強みをWebアプリに引き継ぎます。</p>
       </article>
@@ -113,9 +113,9 @@
           <h3>千種内科クリニック</h3>
           <p class="clinic-meta">内科・循環器内科・小児科 / 愛知県名古屋市千種区今池1-2-3</p>
           <div class="cta-row">
-            <a class="primary-cta" href="tel:0521234567">電話する</a>
-            <a href="https://maps.google.com/" target="_blank" rel="noreferrer">地図を見る</a>
-            <a href="#" aria-disabled="true">公式サイト</a>
+            <a class="generated-action action-phone primary-cta" href="tel:0521234567"><span>電話する</span></a>
+            <a class="generated-action action-map" href="https://maps.google.com/" target="_blank" rel="noreferrer"><span>地図を見る</span></a>
+            <a class="generated-action action-detail" href="#" aria-disabled="true"><span>公式サイト</span></a>
           </div>
           <table class="time-table" aria-label="診療時間">
             <thead>

@@ -60,9 +60,9 @@ function renderClinics() {
         <strong>休診日</strong><span>${clinic.holiday}</span>
       </div>
       <div class="result-actions">
-        <a class="primary" href="tel:0521234567">電話</a>
-        <a href="https://maps.google.com/" target="_blank" rel="noreferrer">地図</a>
-        <a href="#detail">詳細</a>
+        <a class="generated-action action-phone primary" href="tel:0521234567"><span>電話</span></a>
+        <a class="generated-action action-map" href="https://maps.google.com/" target="_blank" rel="noreferrer"><span>地図</span></a>
+        <a class="generated-action action-detail" href="#detail"><span>詳細</span></a>
       </div>
     </article>
   `).join("");
