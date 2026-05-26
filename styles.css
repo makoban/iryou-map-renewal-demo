@@ -206,7 +206,7 @@ h1 {
 .search-surface {
   position: relative;
   isolation: isolate;
-  min-height: 326px;
+  min-height: 430px;
   padding: 46px 48px 34px;
   overflow: hidden;
   border: 0;
@@ -300,10 +300,14 @@ h1 {
 
 .branch-panel {
   margin-top: 16px;
+  min-height: 158px;
+  max-height: 300px;
   padding: 14px;
+  overflow: auto;
   border: 1px solid #d9ebe7;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.76);
+  overscroll-behavior: contain;
 }
 
 .branch-empty,
@@ -343,6 +347,7 @@ h1 {
 
 .conversation-row {
   grid-template-columns: 1fr 84px;
+  align-items: stretch;
 }
 
 .word-row input,
@@ -356,20 +361,31 @@ h1 {
 }
 
 .conversation-row textarea {
-  min-height: 76px;
+  height: 82px;
+  min-height: 82px;
+  max-height: 82px;
   padding-top: 12px;
-  resize: vertical;
+  resize: none;
   line-height: 1.55;
+  overflow: auto;
 }
 
 .conversation-log {
   display: grid;
   gap: 8px;
+  min-height: 58px;
+  max-height: 118px;
   margin-bottom: 12px;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .conversation-guide {
+  min-height: 0;
+  max-height: 104px;
   margin-bottom: 12px;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .conversation-guide:empty {
@@ -384,6 +400,7 @@ h1 {
   background: rgba(255, 255, 255, 0.8);
   color: var(--muted);
   line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 
 .conversation-log strong {
@@ -814,7 +831,7 @@ h1 {
   isolation: isolate;
   display: flex;
   flex-direction: column;
-  min-height: 320px;
+  min-height: 340px;
   padding: 22px;
   border: 0;
   background: rgba(255, 255, 255, 0.9);
@@ -854,6 +871,9 @@ h1 {
 .result-card h3 {
   margin: 8px 0;
   font-size: 20px;
+  line-height: 1.35;
+  min-height: 54px;
+  overflow-wrap: anywhere;
 }
 
 .status {
@@ -925,6 +945,7 @@ h1 {
 .result-facts {
   display: grid;
   gap: 6px;
+  min-height: 76px;
   margin: 0 0 14px;
   padding: 0;
   list-style: none;
@@ -932,10 +953,15 @@ h1 {
   font-size: 14px;
 }
 
+.result-facts li {
+  overflow-wrap: anywhere;
+}
+
 .result-hours {
   display: grid;
   grid-template-columns: 80px 1fr;
   gap: 6px;
+  min-height: 86px;
   margin-top: auto;
   padding: 10px;
   border: 1px solid #d9ebe7;
@@ -943,6 +969,7 @@ h1 {
   background: rgba(255, 255, 255, 0.76);
   color: var(--muted);
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .result-hours strong {
@@ -1386,7 +1413,7 @@ h1 {
   }
 
   .search-surface {
-    min-height: auto;
+    min-height: 410px;
     padding: 38px 28px 30px;
   }
 
@@ -1403,7 +1430,7 @@ h1 {
   }
 
   .result-card {
-    min-height: auto;
+    min-height: 330px;
   }
 
   .memo-grid,
@@ -1448,7 +1475,16 @@ h1 {
   }
 
   .search-surface {
+    min-height: 390px;
     padding: 30px 18px 24px;
+  }
+
+  .branch-panel {
+    max-height: 284px;
+  }
+
+  .conversation-log {
+    max-height: 104px;
   }
 
   .search-row input,
