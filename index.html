@@ -7,7 +7,7 @@
   <meta name="description" content="症状を伝えるだけで簡単検索。今から行ける受診先へ。東海地方専門の医療機関検索デモです。">
   <title>医療MAP 症状を伝えるだけで簡単検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css?v=20260526-excel-data">
+  <link rel="stylesheet" href="./styles.css?v=20260526-refined-design">
 </head>
 <body>
   <header class="app-header">
@@ -27,8 +27,9 @@
     <section class="hero" id="home">
       <div class="hero-copy">
         <p class="eyebrow">東海で、今日行ける受診先をすぐ見つける</p>
-        <h1>症状を伝えるだけで<br>簡単検索。<br>今から行ける受診先へ。</h1>
-        <p class="lead">東海地方専門。起動すると現在地に近い候補を表示し、入力した内容に合わせて近さとマッチ度順に並び替わります。</p>
+        <img class="hero-lettering" src="./assets/generated-ui/hero-lettering-refined.png" alt="症状を伝えるだけで簡単検索。今から行ける受診先へ。">
+        <h1 class="visually-hidden">症状を伝えるだけで簡単検索。今から行ける受診先へ。</h1>
+        <p class="lead">東海地方専門</p>
       </div>
 
       <section class="search-surface" aria-label="病院検索">
@@ -51,7 +52,7 @@
       <div class="section-heading">
         <p class="eyebrow">近くの候補</p>
         <h2 id="results-title">近さとマッチ度順で表示</h2>
-        <p id="results-copy">ことばや現在地から、近くて条件に合う候補を上から表示します。</p>
+        <p id="results-copy">入力に合わせて更新します。</p>
       </div>
 
       <div class="result-summary" id="result-summary">
@@ -66,7 +67,7 @@
       <div class="section-heading">
         <p class="eyebrow">施設詳細</p>
         <h2 id="detail-heading">施設を選択してください</h2>
-        <p id="detail-copy">基本情報、診療時間、対応状況、確認状態を項目名つきで表示します。</p>
+        <p id="detail-copy">空欄も項目名つきで表示します。</p>
       </div>
 
       <div class="detail-card">
@@ -185,6 +186,6 @@
     <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
-  <script src="./app.js?v=20260526-excel-data"></script>
+  <script src="./app.js?v=20260526-refined-design"></script>
 </body>
 </html>

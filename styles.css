@@ -147,8 +147,8 @@ main {
   grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
   gap: 46px;
   align-items: center;
-  padding: 38px 0 24px;
-  min-height: 410px;
+  padding: 34px 0 22px;
+  min-height: 390px;
 }
 
 .hero-copy {
@@ -164,12 +164,12 @@ main {
 
 .hero-lettering {
   display: block;
-  width: min(720px, 112%);
+  width: min(660px, 108%);
   max-width: none;
-  margin: 0 0 18px -24px;
+  margin: 0 0 12px -22px;
   border-radius: 8px;
   mix-blend-mode: multiply;
-  filter: drop-shadow(0 18px 34px rgba(0, 85, 80, 0.08));
+  filter: drop-shadow(0 16px 24px rgba(0, 85, 80, 0.06));
 }
 
 h1,
@@ -190,11 +190,19 @@ h1 {
 }
 
 .lead {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
   margin: 0;
+  padding: 6px 12px;
+  border: 1px solid #cce3de;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
   max-width: 560px;
-  color: var(--muted);
-  font-size: 16px;
-  line-height: 1.9;
+  color: var(--teal-dark);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
 }
 
 .search-surface,
@@ -317,7 +325,7 @@ h1 {
   border-radius: 28px;
   background:
     #ffffff
-    url("./assets/generated-ui/message-input-frame.png") center / 100% 100% no-repeat;
+    url("./assets/generated-ui/message-input-refined.png") center / 100% 100% no-repeat;
   box-shadow: 0 20px 44px rgba(13, 74, 70, 0.09);
   transition: box-shadow 0.16s ease, transform 0.16s ease;
 }
@@ -360,7 +368,7 @@ h1 {
   border-radius: 20px;
   background:
     #007c78
-    url("./assets/generated-ui/message-mic-button.png") center / cover no-repeat;
+    url("./assets/generated-ui/message-mic-refined.png") center / cover no-repeat;
   color: transparent;
   font-size: 0;
   text-indent: -999px;
@@ -930,7 +938,7 @@ h1 {
   inset: 0;
   z-index: -1;
   border-radius: 12px;
-  background: url("./assets/generated-ui/result-frame-simple.png") center / 100% 100% no-repeat;
+  background: url("./assets/generated-ui/result-card-refined.png") center / 100% 100% no-repeat;
   opacity: 0.74;
   pointer-events: none;
 }
@@ -1060,9 +1068,15 @@ h1 {
 .result-actions,
 .cta-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 54px);
+  justify-content: end;
   gap: 9px;
   margin-top: 14px;
+}
+
+.cta-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: stretch;
 }
 
 .result-actions a,
@@ -1083,7 +1097,7 @@ h1 {
 }
 
 .generated-action {
-  min-height: 46px;
+  min-height: 52px;
   padding: 8px 10px 8px 42px !important;
   border: 0 !important;
   color: var(--teal-dark) !important;
@@ -1115,6 +1129,27 @@ h1 {
 }
 
 .result-actions a.generated-action.action-phone,
+.result-actions a.generated-action.action-detail {
+  width: 52px;
+  min-width: 52px;
+  padding: 0 !important;
+  border-radius: 999px;
+}
+
+.result-actions a.generated-action span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.result-actions a.generated-action.action-phone {
+  --action-bg: url("./assets/generated-ui/action-phone-icon.png");
+  color: var(--teal-dark) !important;
+}
+
 .cta-row a.generated-action.action-phone {
   --action-bg: url("./assets/generated-ui/action-phone-soft.png");
   color: var(--teal-dark) !important;
@@ -1128,8 +1163,12 @@ h1 {
 
 .result-actions a.generated-action.action-detail,
 .cta-row a.generated-action.action-detail {
-  --action-bg: url("./assets/generated-ui/action-detail-soft.png");
+  --action-bg: url("./assets/generated-ui/action-detail-icon.png");
   color: #98600a !important;
+}
+
+.cta-row a.generated-action.action-detail {
+  --action-bg: url("./assets/generated-ui/action-detail-soft.png");
 }
 
 .action-detail span,

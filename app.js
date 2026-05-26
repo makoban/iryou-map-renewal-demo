@@ -387,9 +387,8 @@ function renderClinics(items = currentResults) {
           <strong>休診日</strong><span>${escapeHtml(clinic.holiday)}</span>
         </div>
         <div class="result-actions">
-          <a class="generated-action action-phone primary ${phoneHref ? "" : "disabled"}" href="${phoneHref || "#detail"}"><span>電話</span></a>
-          <a class="generated-action action-map ${mapHref ? "" : "disabled"}" href="${mapHref || "#detail"}" target="_blank" rel="noreferrer"><span>地図</span></a>
-          <a class="generated-action action-detail" href="#detail" data-detail-id="${escapeHtml(clinic.id)}"><span>詳細</span></a>
+          <a class="generated-action action-phone primary ${phoneHref ? "" : "disabled"}" href="${phoneHref || "#detail"}" aria-label="電話" title="電話"><span>電話</span></a>
+          <a class="generated-action action-detail" href="#detail" data-detail-id="${escapeHtml(clinic.id)}" aria-label="詳細" title="詳細"><span>詳細</span></a>
         </div>
       </article>
     `;
@@ -418,7 +417,7 @@ function renderDetail(clinic = currentResults[0]) {
   if (!heading || !overview || !statusRow || !name || !meta || !fields) return;
 
   heading.textContent = clinic.name;
-  if (copy) copy.textContent = "Excelから抽出した基本情報を、空欄でも項目名つきで確認できます。";
+  if (copy) copy.textContent = "項目名つきで確認できます。";
   overview.innerHTML = `
     <article><strong>基本情報</strong><span>${escapeHtml(clinic.address)}<br>${escapeHtml(displayValue(clinic.phone))}</span></article>
     <article><strong>診療時間</strong><span>${escapeMultiline(clinic.hours)}</span></article>
@@ -546,8 +545,8 @@ function renderConversationResult(text, result, options = {}) {
       ? "入力中に即時更新"
       : "入力内容 + 近さ順";
   const copy = guide.source === "gemini"
-    ? "入力された言葉の意味を整理し、近さとマッチ度順で更新しています。"
-    : "入力中はすぐ候補を更新し、入力が止まったあと内容を整理します。";
+    ? "AIで整理しました。"
+    : "入力に合わせて更新中。";
   renderDepartmentNote(result, text, guide, "#conversation-guide");
   renderClinics(result.items);
   updateResultHeader(`「${text}」の候補`, copy, summaryLabel);
@@ -562,8 +561,8 @@ function runFuzzySearch(query, mode = "word") {
   renderClinics(result.items);
   const label = mode === "location" ? "現在地から近い候補" : `「${query}」の候補`;
   const copy = mode === "location"
-    ? "現在地に近い順を中心に、診療中と確認日も見ながら表示します。"
-    : "入力した言葉に近い科目と、現在地からの近さを合わせて表示します。";
+    ? "現在地から表示。"
+    : "入力に合わせて表示。";
   updateResultHeader(label, copy, "近い順 + マッチ度順");
   document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
 }
@@ -572,7 +571,7 @@ function renderNearbyResults() {
   clearTimeout(aiIdleTimer);
   const result = searchClinics("現在地", "location");
   renderClinics(result.items);
-  updateResultHeader("掲載情報が多い候補", "Excelから反映した施設データを表示しています。入力すると内容に合う候補へリアルタイムに変わります。", "情報充実度 + マッチ度順");
+  updateResultHeader("掲載情報が多い候補", "入力すると更新します。", "情報充実度 + マッチ度順");
   const guidePanel = document.querySelector("#conversation-guide");
   if (guidePanel) guidePanel.innerHTML = "";
   const log = document.querySelector("#conversation-log");
