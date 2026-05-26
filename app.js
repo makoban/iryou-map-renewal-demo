@@ -135,9 +135,38 @@ const departmentRules = [
 
 let currentResults = [];
 let chatTimer = 0;
+let aiRequestSeq = 0;
 
-function uniqueItems(items) {
-  return [...new Set(items)].slice(0, 4);
+function uniqueItems(items, limit = 4) {
+  return [...new Set(items)].slice(0, limit);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function normalizeGuideFromApi(guide) {
+  const isObject = guide && typeof guide === "object";
+  const source = isObject && guide.source === "gemini" ? "gemini" : "local";
+  const departments = Array.isArray(guide?.departments)
+    ? guide.departments.map((item) => String(item).trim()).filter(Boolean)
+    : [];
+  const keywords = Array.isArray(guide?.keywords)
+    ? guide.keywords.map((item) => String(item).trim()).filter(Boolean)
+    : [];
+
+  return {
+    source,
+    urgency: guide?.urgency === "emergency" ? "emergency" : "normal",
+    departments: uniqueItems(departments, 4),
+    keywords: uniqueItems(keywords, 8),
+    summary: typeof guide?.summary === "string" ? guide.summary.slice(0, 90) : ""
+  };
 }
 
 function findDepartments(text) {
@@ -161,17 +190,21 @@ function findDepartments(text) {
   };
 }
 
-function scoreClinic(clinic, query, departments, mode) {
+function scoreClinic(clinic, query, departments, mode, guideKeywords = []) {
   const text = `${clinic.name} ${clinic.departments} ${clinic.address} ${clinic.station} ${clinic.keywords.join(" ")}`;
   const departmentMatches = departments.filter((department) => clinic.departmentList.includes(department)).length;
   const keywordMatches = clinic.keywords.filter((keyword) => query.includes(keyword)).length;
-  const keywordHit = keywordMatches > 0 || text.includes(query);
+  const guideKeywordMatches = guideKeywords.filter((keyword) => (
+    text.includes(keyword) ||
+    clinic.keywords.some((localKeyword) => localKeyword.includes(keyword) || keyword.includes(localKeyword))
+  )).length;
+  const keywordHit = keywordMatches > 0 || guideKeywordMatches > 0 || (query && text.includes(query));
   const childIntentPoint = /子ども|子供|こども|幼児|赤ちゃん/.test(query) && clinic.keywords.includes("子ども") ? 18 : 0;
   const specialtyPoint = childIntentPoint && clinic.departmentList[0]?.includes("小児") ? 24 : 0;
   const distancePoint = Math.max(0, 30 - Math.round(clinic.distanceMeters / 30));
   const exactPoint = query && text.includes(query) ? 18 : 0;
   const departmentPoint = Math.min(38, departmentMatches * 22);
-  const keywordPoint = Math.min(32, keywordMatches * 12 + (keywordHit ? 8 : 0));
+  const keywordPoint = Math.min(36, keywordMatches * 12 + guideKeywordMatches * 10 + (keywordHit ? 8 : 0));
   const locationPoint = mode === "location" ? 18 : 0;
   const match = mode === "location"
     ? Math.min(98, 72 + Math.round(distancePoint * 0.6))
@@ -185,22 +218,23 @@ function scoreClinic(clinic, query, departments, mode) {
   };
 }
 
-function searchClinics(query = "", mode = "word") {
+function searchClinics(query = "", mode = "word", guide = null) {
+  const aiGuide = normalizeGuideFromApi(guide);
   const departmentResult = mode === "word" ? findDepartments(query) : { type: "normal", departments: [] };
-  if (departmentResult.type === "emergency") {
+  if (departmentResult.type === "emergency" || aiGuide.urgency === "emergency") {
     return {
       type: "emergency",
       departments: departmentResult.departments,
       items: clinics
-        .map((clinic) => scoreClinic(clinic, query, [], "location"))
+        .map((clinic) => scoreClinic(clinic, query, [], "location", aiGuide.keywords))
         .sort((a, b) => a.distanceMeters - b.distanceMeters)
         .slice(0, 3)
     };
   }
 
-  const departments = departmentResult.departments;
+  const departments = aiGuide.departments.length ? aiGuide.departments : departmentResult.departments;
   const scored = clinics
-    .map((clinic) => scoreClinic(clinic, query, departments, mode))
+    .map((clinic) => scoreClinic(clinic, query, departments, mode, aiGuide.keywords))
     .sort((a, b) => b.rank - a.rank || a.distanceMeters - b.distanceMeters)
     .slice(0, 3);
 
@@ -255,15 +289,17 @@ function updateResultHeader(label, copy, summary) {
   `;
 }
 
-function renderDepartmentNote(result, query) {
-  const panel = document.querySelector("#branch-panel");
+function renderDepartmentNote(result, query, guide = null, targetSelector = "#branch-panel") {
+  const panel = document.querySelector(targetSelector);
   if (!panel) return;
+  const aiGuide = normalizeGuideFromApi(guide);
+  const escapedQuery = escapeHtml(query);
 
   if (result.type === "emergency") {
     panel.innerHTML = `
       <div class="branch-note branch-alert">
         <strong>先に救急相談をおすすめします</strong>
-        <p>「${query}」は緊急性が高い可能性があります。受診先を探す前に119または#7119などの救急相談を確認してください。</p>
+        <p>「${escapedQuery}」は緊急性が高い可能性があります。受診先を探す前に119または#7119などの救急相談を確認してください。</p>
         <p>下には、現在地に近い候補を表示しています。</p>
       </div>
     `;
@@ -271,24 +307,61 @@ function renderDepartmentNote(result, query) {
   }
 
   const departments = result.departments.length ? result.departments : ["近くの医療機関"];
+  const summary = aiGuide.summary || "細かい条件を選ばなくても、近さとマッチ度で上から並べます。";
+  const title = aiGuide.source === "gemini" ? "会話から候補を整理しました" : `「${escapedQuery || "現在地"}」に近い候補`;
   panel.innerHTML = `
     <div class="branch-note">
-      <strong>「${query || "現在地"}」に近い候補</strong>
+      <strong>${title}</strong>
       <div class="department-list" aria-label="推定した候補科目">
-        ${departments.map((department) => `<span class="department-chip">${department}</span>`).join("")}
+        ${departments.map((department) => `<span class="department-chip">${escapeHtml(department)}</span>`).join("")}
       </div>
-      <p>細かい条件を選ばなくても、近さとマッチ度で上から並べます。</p>
+      <p>${escapeHtml(summary)}</p>
     </div>
   `;
 }
 
-function summarizeAiGuide(query, result) {
+function summarizeAiGuide(query, result, guide = null) {
+  const aiGuide = normalizeGuideFromApi(guide);
   if (result.type === "emergency") {
     return "緊急性が高い可能性があります。受診先検索より先に119または救急相談を確認してください。";
   }
 
+  if (aiGuide.source === "gemini" && aiGuide.summary) {
+    return aiGuide.summary;
+  }
+
   const departments = result.departments.length ? result.departments.join("、") : "近くの医療機関";
   return `「${query}」から、${departments}を候補にしました。近さとマッチ度が高い順に並べています。`;
+}
+
+async function requestGeminiGuide(message) {
+  if (!["http:", "https:"].includes(window.location.protocol)) return null;
+
+  const apiUrl = new URL("api/gemini-guide", window.location.href);
+  const response = await fetch(apiUrl.href, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message })
+  });
+
+  if (!response.ok) return null;
+  const payload = await response.json();
+  return payload?.ok && payload.guide ? payload.guide : null;
+}
+
+function renderConversationResult(text, result, options = {}) {
+  const log = document.querySelector("#conversation-log");
+  if (!log) return;
+
+  const guide = normalizeGuideFromApi(options.guide);
+  renderDepartmentNote(result, text, guide, "#conversation-guide");
+  renderClinics(result.items);
+  updateResultHeader(`「${text}」の候補`, "会話の内容から条件を読み取り、近さとマッチ度順で更新しています。", "会話から自動更新");
+  log.innerHTML = `
+    <p><strong>あなた</strong> ${escapeHtml(text)}</p>
+    <p><strong>案内</strong> ${escapeHtml(summarizeAiGuide(text, result, guide))}</p>
+    ${options.pending ? "<p><small>会話の内容を確認しています。</small></p>" : ""}
+  `;
 }
 
 function runFuzzySearch(query, mode = "word") {
@@ -307,21 +380,33 @@ function updateConversation(query, options = {}) {
   const text = query.trim();
   const log = document.querySelector("#conversation-log");
   if (!log) return;
+  const requestId = ++aiRequestSeq;
 
   if (!text) {
     log.innerHTML = `
       <p><strong>AI</strong> 例: 子どもが熱っぽい、今から行ける近くの小児科を探したい</p>
     `;
+    const guidePanel = document.querySelector("#conversation-guide");
+    if (guidePanel) guidePanel.innerHTML = "";
     return;
   }
 
-  const result = searchClinics(text, "word");
-  renderClinics(result.items);
-  updateResultHeader(`「${text}」の候補`, "会話の内容から条件を読み取り、近さとマッチ度順で更新しています。", "会話から自動更新");
-  log.innerHTML = `
-    <p><strong>あなた</strong> ${text}</p>
-    <p><strong>AI</strong> ${summarizeAiGuide(text, result)}</p>
-  `;
+  const localResult = searchClinics(text, "word");
+  renderConversationResult(text, localResult, { pending: true });
+
+  requestGeminiGuide(text)
+    .then((guide) => {
+      if (requestId !== aiRequestSeq) return;
+      if (!guide) {
+        renderConversationResult(text, localResult);
+        return;
+      }
+      const result = searchClinics(text, "word", guide);
+      renderConversationResult(text, result, { guide });
+    })
+    .catch(() => {
+      if (requestId === aiRequestSeq) renderConversationResult(text, localResult);
+    });
 
   if (options.scroll) {
     document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
@@ -336,6 +421,7 @@ function renderWordBranch() {
       <div class="conversation-log" id="conversation-log" aria-live="polite">
         <p><strong>AI</strong> 例: 子どもが熱っぽい、今から行ける近くの小児科を探したい</p>
       </div>
+      <div class="conversation-guide" id="conversation-guide" aria-live="polite"></div>
       <label for="chat-input">AIに伝える内容</label>
       <div class="conversation-row">
         <textarea id="chat-input" rows="2" placeholder="話す、または入力してください"></textarea>

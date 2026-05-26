@@ -368,6 +368,14 @@ h1 {
   margin-bottom: 12px;
 }
 
+.conversation-guide {
+  margin-bottom: 12px;
+}
+
+.conversation-guide:empty {
+  display: none;
+}
+
 .conversation-log p {
   margin: 0;
   padding: 10px 12px;

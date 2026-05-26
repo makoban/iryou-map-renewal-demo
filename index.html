@@ -7,7 +7,7 @@
   <meta name="description" content="東海地方専門の医療機関検索。地域、診療科、症状、現在地から、今日行ける受診先を一番簡単に探せる医療MAPの試作です。">
   <title>医療MAP 東海地方専門の受診先検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css?v=20260526-gemini-chat">
+  <link rel="stylesheet" href="./styles.css?v=20260526-render-gemini">
 </head>
 <body>
   <header class="app-header">
@@ -135,13 +135,13 @@
 
       <section class="tab-panel active" data-tab-panel="summary">
         <h3>見せ方の中心</h3>
-        <p>利用者の前面操作は「ことばで伝える」「現在地で探す」の2つだけにする。話すたびにAIが条件を整理し、近さとマッチ度順に候補一覧を更新する。</p>
+        <p>利用者の前面操作は「ことばで伝える」「現在地で探す」の2つだけにする。Render上では話すたびにGemini APIが条件を整理し、近さとマッチ度順に候補一覧を更新する。</p>
         <div class="memo-grid">
           <article><strong>入口</strong><span>会話、または現在地だけ</span></article>
           <article><strong>AI</strong><span>Gemini APIで曖昧な症状・希望条件を構造化する</span></article>
           <article><strong>並び順</strong><span>近さとマッチ度を合わせて上位表示する</span></article>
         </div>
-        <p class="warning">公開静的デモにはGemini APIキーを置かない。本番はサーバー側またはCloudflare Workers等でGemini APIを呼び、返したJSONで一覧を更新する。</p>
+        <p class="warning">Gemini APIキーはRenderの環境変数 GEMINI_API_KEY に置く。HTMLやJavaScriptには入れず、/api/gemini-guide が返したJSONで一覧を更新する。</p>
         <img src="./assets/current-home-mobile.png" alt="現行スマホ表示" class="mini-shot">
       </section>
 
@@ -192,6 +192,6 @@
     <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
-  <script src="./app.js?v=20260526-gemini-chat"></script>
+  <script src="./app.js?v=20260526-render-gemini"></script>
 </body>
 </html>
