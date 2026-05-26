@@ -7,7 +7,7 @@
   <meta name="description" content="症状を伝えるだけで簡単検索。今から行ける受診先へ。東海地方専門の医療機関検索デモです。">
   <title>医療MAP 症状を伝えるだけで簡単検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css?v=20260526-hybrid-ai-ui-2">
+  <link rel="stylesheet" href="./styles.css?v=20260526-excel-data">
 </head>
 <body>
   <header class="app-header">
@@ -65,42 +65,34 @@
     <section class="detail-shell" id="detail">
       <div class="section-heading">
         <p class="eyebrow">施設詳細</p>
-        <h2>千種内科クリニック</h2>
-        <p>基本情報、診療時間、確認日、修正依頼を1画面に整理します。</p>
+        <h2 id="detail-heading">施設を選択してください</h2>
+        <p id="detail-copy">基本情報、診療時間、対応状況、確認状態を項目名つきで表示します。</p>
       </div>
 
       <div class="detail-card">
-        <div class="photo-grid" aria-label="施設写真">
-          <div class="clinic-photo primary"></div>
-          <div class="clinic-photo small"></div>
-          <div class="clinic-photo small second"></div>
+        <div class="detail-overview-grid" id="detail-overview-grid" aria-label="施設情報の概要">
+          <article><strong>基本情報</strong><span>未選択</span></article>
+          <article><strong>診療時間</strong><span>未選択</span></article>
+          <article><strong>対応状況</strong><span>未選択</span></article>
         </div>
         <div class="detail-body">
-          <div class="status-row">
-            <span class="status open">診療中</span>
-            <span>18:30まで</span>
-            <span>最終確認日 2026.05</span>
+          <div class="status-row" id="detail-status-row">
+            <span class="status closed">要確認</span>
+            <span>時間未確認</span>
+            <span>確認日未確認</span>
           </div>
-          <h3>千種内科クリニック</h3>
-          <p class="clinic-meta">内科・循環器内科・小児科 / 愛知県名古屋市千種区今池1-2-3</p>
+          <h3 id="detail-name">施設名未確認</h3>
+          <p class="clinic-meta" id="detail-meta">診療科目未確認 / 住所未確認</p>
           <div class="cta-row">
-            <a class="generated-action action-phone primary-cta" href="tel:0521234567"><span>電話する</span></a>
-            <a class="generated-action action-map" href="https://maps.google.com/" target="_blank" rel="noreferrer"><span>地図を見る</span></a>
-            <a class="generated-action action-detail" href="#" aria-disabled="true"><span>公式サイト</span></a>
+            <a class="generated-action action-phone primary-cta disabled" id="detail-phone" href="#"><span>電話する</span></a>
+            <a class="generated-action action-map disabled" id="detail-map" href="#" target="_blank" rel="noreferrer"><span>地図を見る</span></a>
+            <a class="generated-action action-detail disabled" id="detail-official" href="#" target="_blank" rel="noreferrer"><span>公式サイト</span></a>
           </div>
-          <table class="time-table" aria-label="診療時間">
-            <thead>
-              <tr><th></th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th><th>日</th></tr>
-            </thead>
-            <tbody>
-              <tr><th>9:00-12:30</th><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td><td>▲</td><td>休</td></tr>
-              <tr><th>15:30-18:30</th><td>●</td><td>●</td><td>●</td><td>休</td><td>●</td><td>休</td><td>休</td></tr>
-            </tbody>
-          </table>
-          <div class="info-list">
-            <p><strong>住所</strong><span>愛知県名古屋市千種区今池1-2-3 今池ビル2階</span></p>
-            <p><strong>電話</strong><span>052-123-4567</span></p>
-            <p><strong>休診日</strong><span>木曜午後・土曜午後・日曜・祝日</span></p>
+          <div class="detail-fields" id="detail-fields">
+            <p><strong>住所</strong><span>未確認</span></p>
+            <p><strong>電話</strong><span>未確認</span></p>
+            <p><strong>診療時間</strong><span>未確認</span></p>
+            <p><strong>休診日</strong><span>未確認</span></p>
           </div>
           <button class="correction-button" type="button">掲載情報の修正を依頼する</button>
         </div>
@@ -193,6 +185,6 @@
     <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
-  <script src="./app.js?v=20260526-hybrid-ai-ui-2"></script>
+  <script src="./app.js?v=20260526-excel-data"></script>
 </body>
 </html>

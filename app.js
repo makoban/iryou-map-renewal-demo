@@ -1,4 +1,4 @@
-const clinics = [
+const fallbackClinics = [
   {
     name: "千種歯科クリニック",
     status: "診療中",
@@ -97,6 +97,8 @@ const clinics = [
   }
 ];
 
+let clinics = fallbackClinics;
+
 const emergencyKeywords = [
   "胸痛", "胸が痛", "息苦し", "呼吸困難", "意識", "ろれつ", "麻痺",
   "けいれん", "大量出血", "激しい頭痛", "突然の頭痛", "倒れ", "アナフィラキシー"
@@ -171,6 +173,90 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function escapeMultiline(value) {
+  return escapeHtml(value).replaceAll("\n", "<br>");
+}
+
+function displayValue(value, fallback = "未確認") {
+  const text = String(value ?? "").trim();
+  return text || fallback;
+}
+
+function normalizeUrl(value) {
+  const text = String(value ?? "").trim();
+  return /^https?:\/\//.test(text) ? text : "";
+}
+
+function buildMapUrl(clinic) {
+  const query = displayValue(clinic.address || clinic.name, "");
+  return query ? `https://maps.google.com/?q=${encodeURIComponent(query)}` : "";
+}
+
+function buildFacilityKeywords(clinic) {
+  const fields = [
+    clinic.name,
+    clinic.departments,
+    clinic.address,
+    clinic.pageType || clinic.type,
+    clinic.holidayCare,
+    clinic.nightCare,
+    clinic.emergencyCare
+  ];
+  const tokens = [];
+  fields.join(" ").split(/[\s、，,/／・\n丁目番号（）()-]+/).forEach((token) => {
+    const cleaned = token.trim();
+    if (cleaned.length >= 2 && !tokens.includes(cleaned)) tokens.push(cleaned);
+  });
+  return tokens.slice(0, 30);
+}
+
+function normalizeFacility(item, index = 0) {
+  const departmentList = Array.isArray(item.departmentList) ? item.departmentList.filter(Boolean) : [];
+  const normalized = {
+    id: displayValue(item.id, `facility-${index}`),
+    name: displayValue(item.name, "施設名未確認"),
+    status: displayValue(item.status, "要確認"),
+    statusClass: displayValue(item.statusClass, "closed"),
+    until: displayValue(item.until, "時間未確認"),
+    departments: displayValue(item.departments, "診療科目未確認"),
+    departmentList,
+    address: displayValue(item.address),
+    station: displayValue(item.station, "最寄り未確認"),
+    distance: displayValue(item.distance, "距離未設定"),
+    distanceMeters: Number.isFinite(item.distanceMeters) ? item.distanceMeters : null,
+    hours: displayValue(item.hours),
+    holiday: displayValue(item.holiday),
+    verified: displayValue(item.verified, "確認日未確認"),
+    phone: displayValue(item.phone, ""),
+    officialUrl: normalizeUrl(item.officialUrl),
+    url: normalizeUrl(item.url || item.finalUrl || item.sourceUrl),
+    pageType: displayValue(item.pageType || item.type),
+    holidayCare: displayValue(item.holidayCare),
+    nightCare: displayValue(item.nightCare),
+    emergencyCare: displayValue(item.emergencyCare),
+    timeImageOnly: displayValue(item.timeImageOnly),
+    quality: displayValue(item.quality),
+    reviewReason: displayValue(item.reviewReason, "なし"),
+    qualityScore: Number.isFinite(item.qualityScore) ? item.qualityScore : 0
+  };
+  normalized.keywords = Array.isArray(item.keywords) && item.keywords.length
+    ? item.keywords
+    : buildFacilityKeywords(normalized);
+  return normalized;
+}
+
+async function loadFacilityData() {
+  try {
+    const response = await fetch("./data/facilities.json?v=20260526-excel-data", { cache: "force-cache" });
+    if (!response.ok) throw new Error("facility_data_failed");
+    const payload = await response.json();
+    if (!Array.isArray(payload.facilities) || !payload.facilities.length) return;
+    clinics = payload.facilities.map(normalizeFacility);
+  } catch {
+    clinics = fallbackClinics.map(normalizeFacility);
+  }
+}
+
 function normalizeGuideFromApi(guide) {
   const isObject = guide && typeof guide === "object";
   const source = isObject && guide.source === "gemini" ? "gemini" : "local";
@@ -222,15 +308,17 @@ function scoreClinic(clinic, query, departments, mode, guideKeywords = []) {
   const keywordHit = keywordMatches > 0 || guideKeywordMatches > 0 || (query && text.includes(query));
   const childIntentPoint = /子ども|子供|こども|幼児|赤ちゃん/.test(query) && clinic.keywords.includes("子ども") ? 18 : 0;
   const specialtyPoint = childIntentPoint && clinic.departmentList[0]?.includes("小児") ? 24 : 0;
-  const distancePoint = Math.max(0, 30 - Math.round(clinic.distanceMeters / 30));
+  const hasDistance = Number.isFinite(clinic.distanceMeters);
+  const distancePoint = hasDistance ? Math.max(0, 30 - Math.round(clinic.distanceMeters / 30)) : 0;
   const exactPoint = query && text.includes(query) ? 18 : 0;
   const departmentPoint = Math.min(38, departmentMatches * 22);
   const keywordPoint = Math.min(36, keywordMatches * 12 + guideKeywordMatches * 10 + (keywordHit ? 8 : 0));
   const locationPoint = mode === "location" ? 18 : 0;
+  const qualityPoint = Math.min(28, Math.round((clinic.qualityScore || 0) / 3));
   const match = mode === "location"
-    ? Math.min(98, 72 + Math.round(distancePoint * 0.6))
-    : Math.min(98, 42 + departmentPoint + keywordPoint + exactPoint + childIntentPoint);
-  const rank = match + distancePoint + locationPoint + specialtyPoint;
+    ? Math.min(98, 48 + Math.round(distancePoint * 0.6) + qualityPoint)
+    : Math.min(98, 32 + departmentPoint + keywordPoint + exactPoint + childIntentPoint + Math.round(qualityPoint * 0.35));
+  const rank = match + distancePoint + locationPoint + specialtyPoint + qualityPoint;
 
   return {
     ...clinic,
@@ -248,7 +336,7 @@ function searchClinics(query = "", mode = "word", guide = null) {
       departments: departmentResult.departments,
       items: clinics
         .map((clinic) => scoreClinic(clinic, query, [], "location", aiGuide.keywords))
-        .sort((a, b) => a.distanceMeters - b.distanceMeters)
+        .sort((a, b) => b.rank - a.rank || String(a.name).localeCompare(String(b.name), "ja"))
         .slice(0, 3)
     };
   }
@@ -256,7 +344,7 @@ function searchClinics(query = "", mode = "word", guide = null) {
   const departments = aiGuide.departments.length ? aiGuide.departments : departmentResult.departments;
   const scored = clinics
     .map((clinic) => scoreClinic(clinic, query, departments, mode, aiGuide.keywords))
-    .sort((a, b) => b.rank - a.rank || a.distanceMeters - b.distanceMeters)
+    .sort((a, b) => b.rank - a.rank || String(a.name).localeCompare(String(b.name), "ja"))
     .slice(0, 3);
 
   return {
@@ -271,34 +359,96 @@ function renderClinics(items = currentResults) {
   if (!list) return;
   const results = items.length ? items : searchClinics("現在地", "location").items;
   currentResults = results;
-  list.innerHTML = results.map((clinic, index) => `
-    <article class="result-card">
-      <div class="result-rank">#${index + 1} 近さ ${clinic.distance} / マッチ度 ${clinic.match}%</div>
-      <div class="result-top">
-        <div>
-          <span class="status ${clinic.statusClass}">${clinic.status}</span>
-          <span class="verified-pill">${clinic.verified}</span>
-          <h3>${clinic.name}</h3>
-          <p>${clinic.departments}</p>
+  list.innerHTML = results.map((clinic, index) => {
+    const phoneHref = clinic.phone ? `tel:${clinic.phone.replace(/[^\d+]/g, "")}` : "";
+    const mapHref = buildMapUrl(clinic);
+    const rankText = clinic.distanceMeters === null
+      ? `#${index + 1} マッチ度 ${clinic.match}% / 情報充実度 ${clinic.qualityScore || 0}`
+      : `#${index + 1} 近さ ${escapeHtml(clinic.distance)} / マッチ度 ${clinic.match}%`;
+    return `
+      <article class="result-card">
+        <div class="result-rank">${rankText}</div>
+        <div class="result-top">
+          <div>
+            <span class="status ${escapeHtml(clinic.statusClass)}">${escapeHtml(clinic.status)}</span>
+            <span class="verified-pill">${escapeHtml(clinic.verified)}</span>
+            <h3>${escapeHtml(clinic.name)}</h3>
+            <p>${escapeHtml(clinic.departments)}</p>
+          </div>
+          <div class="map-tile" aria-hidden="true"></div>
         </div>
-        <div class="map-tile" aria-hidden="true"></div>
-      </div>
-      <ul class="result-facts">
-        <li>${clinic.address}</li>
-        <li>${clinic.station} / ${clinic.distance}</li>
-        <li>${clinic.until}</li>
-      </ul>
-      <div class="result-hours">
-        <strong>診療時間</strong><span>${clinic.hours}</span>
-        <strong>休診日</strong><span>${clinic.holiday}</span>
-      </div>
-      <div class="result-actions">
-        <a class="generated-action action-phone primary" href="tel:0521234567"><span>電話</span></a>
-        <a class="generated-action action-map" href="https://maps.google.com/" target="_blank" rel="noreferrer"><span>地図</span></a>
-        <a class="generated-action action-detail" href="#detail"><span>詳細</span></a>
-      </div>
-    </article>
-  `).join("");
+        <ul class="result-facts">
+          <li><strong>住所</strong><span>${escapeHtml(clinic.address)}</span></li>
+          <li><strong>電話</strong><span>${escapeHtml(displayValue(clinic.phone))}</span></li>
+          <li><strong>距離</strong><span>${escapeHtml(clinic.distance)}</span></li>
+        </ul>
+        <div class="result-hours">
+          <strong>診療時間</strong><span>${escapeHtml(clinic.hours)}</span>
+          <strong>休診日</strong><span>${escapeHtml(clinic.holiday)}</span>
+        </div>
+        <div class="result-actions">
+          <a class="generated-action action-phone primary ${phoneHref ? "" : "disabled"}" href="${phoneHref || "#detail"}"><span>電話</span></a>
+          <a class="generated-action action-map ${mapHref ? "" : "disabled"}" href="${mapHref || "#detail"}" target="_blank" rel="noreferrer"><span>地図</span></a>
+          <a class="generated-action action-detail" href="#detail" data-detail-id="${escapeHtml(clinic.id)}"><span>詳細</span></a>
+        </div>
+      </article>
+    `;
+  }).join("");
+  renderDetail(results[0]);
+}
+
+function setActionLink(link, href) {
+  if (!link) return;
+  const text = String(href || "").trim();
+  const activeHref = /^(https?:|tel:|mailto:)/.test(text) ? text : "";
+  link.href = activeHref || "#detail";
+  link.classList.toggle("disabled", !activeHref);
+  link.setAttribute("aria-disabled", activeHref ? "false" : "true");
+}
+
+function renderDetail(clinic = currentResults[0]) {
+  if (!clinic) return;
+  const heading = document.querySelector("#detail-heading");
+  const copy = document.querySelector("#detail-copy");
+  const overview = document.querySelector("#detail-overview-grid");
+  const statusRow = document.querySelector("#detail-status-row");
+  const name = document.querySelector("#detail-name");
+  const meta = document.querySelector("#detail-meta");
+  const fields = document.querySelector("#detail-fields");
+  if (!heading || !overview || !statusRow || !name || !meta || !fields) return;
+
+  heading.textContent = clinic.name;
+  if (copy) copy.textContent = "Excelから抽出した基本情報を、空欄でも項目名つきで確認できます。";
+  overview.innerHTML = `
+    <article><strong>基本情報</strong><span>${escapeHtml(clinic.address)}<br>${escapeHtml(displayValue(clinic.phone))}</span></article>
+    <article><strong>診療時間</strong><span>${escapeMultiline(clinic.hours)}</span></article>
+    <article><strong>対応状況</strong><span>救急: ${escapeHtml(clinic.emergencyCare)}<br>夜間: ${escapeHtml(clinic.nightCare)}<br>休日: ${escapeHtml(clinic.holidayCare)}</span></article>
+  `;
+  statusRow.innerHTML = `
+    <span class="status ${escapeHtml(clinic.statusClass)}">${escapeHtml(clinic.status)}</span>
+    <span>${escapeHtml(clinic.until)}</span>
+    <span>${escapeHtml(clinic.verified)}</span>
+    <span>抽出品質 ${escapeHtml(clinic.quality)}</span>
+  `;
+  name.textContent = clinic.name;
+  meta.textContent = `${clinic.departments} / ${clinic.address}`;
+  fields.innerHTML = `
+    <p><strong>住所</strong><span>${escapeHtml(clinic.address)}</span></p>
+    <p><strong>電話</strong><span>${escapeHtml(displayValue(clinic.phone))}</span></p>
+    <p><strong>診療科目</strong><span>${escapeHtml(clinic.departments)}</span></p>
+    <p><strong>診療時間</strong><span>${escapeMultiline(clinic.hours)}</span></p>
+    <p><strong>休診日</strong><span>${escapeMultiline(clinic.holiday)}</span></p>
+    <p><strong>救急対応</strong><span>${escapeHtml(clinic.emergencyCare)}</span></p>
+    <p><strong>夜間対応</strong><span>${escapeHtml(clinic.nightCare)}</span></p>
+    <p><strong>休日診療</strong><span>${escapeHtml(clinic.holidayCare)}</span></p>
+    <p><strong>公式サイト</strong><span>${clinic.officialUrl ? `<a href="${escapeHtml(clinic.officialUrl)}" target="_blank" rel="noreferrer">${escapeHtml(clinic.officialUrl)}</a>` : "未確認"}</span></p>
+    <p><strong>医療MAP URL</strong><span>${clinic.url ? `<a href="${escapeHtml(clinic.url)}" target="_blank" rel="noreferrer">${escapeHtml(clinic.url)}</a>` : "未確認"}</span></p>
+    <p><strong>要確認</strong><span>${escapeHtml(clinic.reviewReason)}</span></p>
+  `;
+
+  setActionLink(document.querySelector("#detail-phone"), clinic.phone ? `tel:${clinic.phone.replace(/[^\d+]/g, "")}` : "");
+  setActionLink(document.querySelector("#detail-map"), buildMapUrl(clinic));
+  setActionLink(document.querySelector("#detail-official"), clinic.officialUrl);
 }
 
 function updateResultHeader(label, copy, summary) {
@@ -422,7 +572,7 @@ function renderNearbyResults() {
   clearTimeout(aiIdleTimer);
   const result = searchClinics("現在地", "location");
   renderClinics(result.items);
-  updateResultHeader("現在地から近い候補", "起動時は現在地に近い順を表示します。入力すると内容に合う候補へリアルタイムに変わります。", "現在地から近い順");
+  updateResultHeader("掲載情報が多い候補", "Excelから反映した施設データを表示しています。入力すると内容に合う候補へリアルタイムに変わります。", "情報充実度 + マッチ度順");
   const guidePanel = document.querySelector("#conversation-guide");
   if (guidePanel) guidePanel.innerHTML = "";
   const log = document.querySelector("#conversation-log");
@@ -599,6 +749,13 @@ function bindEvents() {
     button.addEventListener("click", () => activateTab(button.dataset.tab));
   });
 
+  document.querySelector("#clinic-list")?.addEventListener("click", (event) => {
+    const detailLink = event.target.closest("[data-detail-id]");
+    if (!detailLink) return;
+    const clinic = currentResults.find((item) => item.id === detailLink.dataset.detailId);
+    if (clinic) renderDetail(clinic);
+  });
+
   document.querySelectorAll("[data-mode]").forEach((button) => {
     button.addEventListener("click", () => activateMode(button.dataset.mode));
   });
@@ -609,6 +766,11 @@ function bindEvents() {
   });
 }
 
-renderWordBranch();
-renderNearbyResults();
-bindEvents();
+async function initApp() {
+  renderWordBranch();
+  bindEvents();
+  await loadFacilityData();
+  renderNearbyResults();
+}
+
+initApp();

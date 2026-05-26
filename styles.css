@@ -1019,16 +1019,23 @@ h1 {
 .result-facts {
   display: grid;
   gap: 6px;
-  min-height: 76px;
+  min-height: 96px;
   margin: 0 0 14px;
   padding: 0;
   list-style: none;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .result-facts li {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 8px;
   overflow-wrap: anywhere;
+}
+
+.result-facts strong {
+  color: var(--ink);
 }
 
 .result-hours {
@@ -1101,6 +1108,12 @@ h1 {
   background: transparent;
 }
 
+.generated-action.disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+  opacity: 0.62;
+}
+
 .result-actions a.generated-action.action-phone,
 .cta-row a.generated-action.action-phone {
   --action-bg: url("./assets/generated-ui/action-phone-soft.png");
@@ -1143,21 +1156,49 @@ h1 {
   opacity: 0.44;
 }
 
-.photo-grid,
+.detail-overview-grid,
 .detail-body {
   position: relative;
   z-index: 1;
 }
 
-.photo-grid {
+.detail-overview-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: 130px 130px;
-  gap: 8px;
-  padding: 14px;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 10px;
+  padding: 16px;
   background:
     linear-gradient(180deg, rgba(241, 249, 247, 0.78), rgba(255, 255, 255, 0.84)),
     #eef7f4;
+}
+
+.detail-overview-grid article {
+  min-height: 132px;
+  padding: 16px;
+  border: 1px solid #cfe4df;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  overflow: hidden;
+}
+
+.detail-overview-grid strong,
+.detail-overview-grid span {
+  display: block;
+}
+
+.detail-overview-grid strong {
+  margin-bottom: 8px;
+  color: var(--teal-dark);
+}
+
+.detail-overview-grid span {
+  color: var(--muted);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.photo-grid {
+  display: none;
 }
 
 .clinic-photo {
@@ -1222,7 +1263,8 @@ h1 {
   background: #f4f8f7;
 }
 
-.info-list {
+.info-list,
+.detail-fields {
   display: grid;
   gap: 0;
   border: 1px solid #d9ebe7;
@@ -1231,21 +1273,31 @@ h1 {
   overflow: hidden;
 }
 
-.info-list p {
+.info-list p,
+.detail-fields p {
   display: grid;
-  grid-template-columns: 86px 1fr;
+  grid-template-columns: 120px 1fr;
   gap: 12px;
   margin: 0;
   padding: 12px;
   border-bottom: 1px solid var(--line);
 }
 
-.info-list p:last-child {
+.info-list p:last-child,
+.detail-fields p:last-child {
   border-bottom: 0;
 }
 
-.info-list strong {
+.info-list strong,
+.detail-fields strong {
   color: var(--ink);
+}
+
+.detail-fields span,
+.detail-fields a {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  line-height: 1.65;
 }
 
 .correction-button {
@@ -1455,7 +1507,8 @@ h1 {
   .hero,
   .trust-band,
   .results-grid,
-  .symptom-card {
+  .symptom-card,
+  .detail-overview-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1597,6 +1650,7 @@ h1 {
   }
 
   .info-list p,
+  .detail-fields p,
   .compare-table p {
     grid-template-columns: 1fr;
   }
