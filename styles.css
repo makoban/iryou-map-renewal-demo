@@ -511,9 +511,145 @@ h1 {
 }
 
 .app-layout,
+.symptom-section,
 .detail-shell,
 .concept-section {
   padding: 38px 0;
+}
+
+.symptom-section {
+  padding-top: 10px;
+}
+
+.compact-heading {
+  margin-bottom: 14px;
+}
+
+.symptom-card {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.82fr);
+  gap: 18px;
+  padding: 24px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 20px 48px rgba(12, 70, 66, 0.08);
+}
+
+.symptom-card::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  border-radius: 8px;
+  background: url("./assets/premium-ui/premium-result-frame.png") center / 100% 100% no-repeat;
+  opacity: 0.42;
+}
+
+.symptom-input-panel label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--teal-dark);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.symptom-row {
+  display: grid;
+  grid-template-columns: 1fr 86px 128px;
+  gap: 8px;
+}
+
+.symptom-row input {
+  min-width: 0;
+  min-height: 54px;
+  padding: 0 16px;
+  border: 1px solid #b9cfca;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+}
+
+.voice-button,
+.symptom-submit {
+  min-height: 54px;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 900;
+  box-shadow: 0 10px 22px rgba(0, 124, 120, 0.12);
+}
+
+.voice-button {
+  background: url("./assets/premium-ui/premium-cta-soft.png") center / 100% 100% no-repeat;
+  color: var(--teal-dark);
+}
+
+.voice-button[disabled] {
+  cursor: not-allowed;
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.symptom-submit {
+  background: url("./assets/premium-ui/premium-cta-teal.png") center / 100% 100% no-repeat;
+  color: white;
+}
+
+.symptom-disclaimer {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.symptom-result {
+  min-height: 132px;
+  padding: 16px;
+  border: 1px solid #d9ebe7;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 253, 251, 0.78));
+}
+
+.result-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.symptom-alert {
+  border-color: #f2bd65;
+  background: #fff8e7;
+}
+
+.symptom-alert strong,
+.symptom-result strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.department-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.department-chip {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: url("./assets/premium-ui/premium-filter-active.png") center / 100% 100% no-repeat;
+  color: var(--teal-dark);
+  font-weight: 900;
+}
+
+.symptom-next {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
 }
 
 .result-toolbar {
@@ -1082,7 +1218,8 @@ h1 {
 
   .hero,
   .trust-band,
-  .results-grid {
+  .results-grid,
+  .symptom-card {
     grid-template-columns: 1fr;
   }
 
@@ -1151,10 +1288,15 @@ h1 {
   }
 
   .search-row,
+  .symptom-row,
   .cta-row,
   .result-actions,
   .panel-tabs {
     grid-template-columns: 1fr;
+  }
+
+  .symptom-card {
+    padding: 18px;
   }
 
   .search-surface {

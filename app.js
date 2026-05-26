@@ -40,6 +40,58 @@ const clinics = [
   }
 ];
 
+const emergencyKeywords = [
+  "胸痛", "胸が痛", "息苦し", "呼吸困難", "意識", "ろれつ", "麻痺",
+  "けいれん", "大量出血", "激しい頭痛", "突然の頭痛", "倒れ", "アナフィラキシー"
+];
+
+const departmentRules = [
+  {
+    departments: ["小児科", "内科"],
+    keywords: ["子ども", "子供", "こども", "幼児", "赤ちゃん", "発熱", "熱", "咳", "せき"]
+  },
+  {
+    departments: ["内科", "呼吸器内科", "耳鼻咽喉科"],
+    keywords: ["発熱", "熱", "咳", "せき", "喉", "のど", "鼻水", "だるい", "風邪"]
+  },
+  {
+    departments: ["歯科", "口腔外科"],
+    keywords: ["歯", "歯ぐき", "歯茎", "虫歯", "口内炎", "親知らず"]
+  },
+  {
+    departments: ["眼科"],
+    keywords: ["目", "眼", "かゆい", "充血", "見えにくい", "涙"]
+  },
+  {
+    departments: ["耳鼻咽喉科"],
+    keywords: ["耳", "鼻", "喉", "のど", "めまい", "聞こえ", "花粉"]
+  },
+  {
+    departments: ["皮膚科"],
+    keywords: ["湿疹", "かゆみ", "かぶれ", "発疹", "じんましん", "やけど", "皮膚"]
+  },
+  {
+    departments: ["整形外科"],
+    keywords: ["腰", "膝", "肩", "骨", "関節", "ねんざ", "捻挫", "打撲", "けが", "痛めた"]
+  },
+  {
+    departments: ["内科", "消化器内科"],
+    keywords: ["腹痛", "お腹", "胃", "吐き気", "下痢", "便秘", "食欲"]
+  },
+  {
+    departments: ["泌尿器科", "内科"],
+    keywords: ["尿", "膀胱", "排尿", "血尿", "頻尿"]
+  },
+  {
+    departments: ["産婦人科"],
+    keywords: ["妊娠", "生理", "不正出血", "おりもの", "婦人科"]
+  },
+  {
+    departments: ["心療内科", "精神科"],
+    keywords: ["不眠", "眠れない", "不安", "気分", "落ち込み", "ストレス"]
+  }
+];
+
 function renderClinics() {
   const list = document.querySelector("#clinic-list");
   if (!list) return;
@@ -70,6 +122,110 @@ function renderClinics() {
       </div>
     </article>
   `).join("");
+}
+
+function uniqueDepartments(items) {
+  return [...new Set(items)].slice(0, 4);
+}
+
+function findDepartments(symptomText) {
+  const text = symptomText.trim();
+  if (!text) {
+    return { type: "empty", departments: [] };
+  }
+
+  if (emergencyKeywords.some((keyword) => text.includes(keyword))) {
+    return {
+      type: "emergency",
+      departments: ["救急相談", "救急外来"]
+    };
+  }
+
+  const matched = [];
+  departmentRules.forEach((rule) => {
+    if (rule.keywords.some((keyword) => text.includes(keyword))) {
+      matched.push(...rule.departments);
+    }
+  });
+
+  return {
+    type: "normal",
+    departments: uniqueDepartments(matched.length ? matched : ["内科"])
+  };
+}
+
+function renderSymptomResult(result) {
+  const target = document.querySelector("#symptom-result");
+  if (!target) return;
+
+  if (result.type === "empty") {
+    target.classList.remove("symptom-alert");
+    target.innerHTML = `<p class="result-empty">例: 子どもの発熱は小児科・内科、歯の痛みは歯科を候補にします。</p>`;
+    return;
+  }
+
+  if (result.type === "emergency") {
+    target.classList.add("symptom-alert");
+    target.innerHTML = `
+      <strong>先に救急相談を案内</strong>
+      <p>緊急性が高い可能性があるため、検索結果より先に119または#7119などの救急相談を表示します。</p>
+      <div class="department-list">
+        <button class="department-chip" type="button" data-department="救急外来">救急外来</button>
+      </div>
+      <p class="symptom-next">医療MAPでは、その後に現在地周辺の救急対応施設を探す導線へ進めます。</p>
+    `;
+    return;
+  }
+
+  target.classList.remove("symptom-alert");
+  target.innerHTML = `
+    <strong>候補の診療科</strong>
+    <div class="department-list">
+      ${result.departments.map((department) => `<button class="department-chip" type="button" data-department="${department}">${department}</button>`).join("")}
+    </div>
+    <p class="symptom-next">科目を押すと、地域検索に反映します。最終判断は医療機関・救急相談につなげる設計です。</p>
+  `;
+}
+
+function runSymptomCheck() {
+  const input = document.querySelector("#symptom-input");
+  if (!input) return;
+  renderSymptomResult(findDepartments(input.value));
+}
+
+function setupVoiceInput() {
+  const voiceButton = document.querySelector("[data-action='voice-input']");
+  const symptomInput = document.querySelector("#symptom-input");
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!voiceButton || !symptomInput) return;
+
+  if (!SpeechRecognition) {
+    voiceButton.disabled = true;
+    voiceButton.textContent = "非対応";
+    voiceButton.title = "このブラウザでは音声入力に対応していません";
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "ja-JP";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.addEventListener("start", () => {
+    voiceButton.textContent = "聞き取り中";
+  });
+  recognition.addEventListener("end", () => {
+    voiceButton.textContent = "音声";
+  });
+  recognition.addEventListener("result", (event) => {
+    const text = event.results?.[0]?.[0]?.transcript;
+    if (text) {
+      symptomInput.value = text;
+      runSymptomCheck();
+    }
+  });
+
+  voiceButton.addEventListener("click", () => recognition.start());
 }
 
 function openPanel(id) {
@@ -121,6 +277,20 @@ function bindEvents() {
     document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
   });
 
+  document.querySelector("[data-action='symptom-check']")?.addEventListener("click", runSymptomCheck);
+
+  document.querySelector("#symptom-input")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") runSymptomCheck();
+  });
+
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-department]");
+    if (!button) return;
+    const input = document.querySelector("#main-search");
+    if (input) input.value = `名古屋市千種区 ${button.dataset.department}`;
+    document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
+  });
+
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closePanels();
     if (event.key === "?" && !event.metaKey && !event.ctrlKey) openPanel("backstage");
@@ -128,4 +298,5 @@ function bindEvents() {
 }
 
 renderClinics();
+setupVoiceInput();
 bindEvents();

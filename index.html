@@ -19,6 +19,7 @@
       </span>
     </a>
     <nav class="header-actions" aria-label="主要メニュー">
+      <a href="#symptom">症状で探す</a>
       <a href="#results">検索結果</a>
       <a href="#detail">詳細</a>
       <button class="ghost-button" type="button" data-open-panel="backstage">提案メニュー</button>
@@ -61,6 +62,29 @@
           <a href="#results">岐阜県</a>
         </div>
       </section>
+    </section>
+
+    <section class="symptom-section" id="symptom">
+      <div class="section-heading compact-heading">
+        <p class="eyebrow">症状から探す</p>
+        <h2>症状を入れるだけで、受診科の候補へ。</h2>
+        <p>文字入力または音声入力から、候補の診療科を絞ります。診断ではなく、受診先探しの補助として使う設計です。</p>
+      </div>
+
+      <div class="symptom-card">
+        <div class="symptom-input-panel">
+          <label for="symptom-input">気になる症状</label>
+          <div class="symptom-row">
+            <input id="symptom-input" type="text" placeholder="例: 子どもの発熱 / 歯が痛い / 目がかゆい">
+            <button class="voice-button" type="button" data-action="voice-input">音声</button>
+            <button class="symptom-submit" type="button" data-action="symptom-check">候補を見る</button>
+          </div>
+          <p class="symptom-disclaimer">強い胸痛、息苦しさ、意識障害、ろれつが回らない等は、検索より先に119または救急相談を案内します。</p>
+        </div>
+        <div class="symptom-result" id="symptom-result" aria-live="polite">
+          <p class="result-empty">例: 子どもの発熱は小児科・内科、歯の痛みは歯科を候補にします。</p>
+        </div>
+      </div>
     </section>
 
     <section class="trust-band" aria-label="医療MAPの特徴">
@@ -180,6 +204,7 @@
           <article><strong>ユーザー</strong><span>近所で今受診先を探している一般利用者</span></article>
           <article><strong>開発側品質</strong><span>上質で美しいUI。ただし表の合言葉は一番簡単にする</span></article>
         </div>
+        <p class="warning">症状入力は診断ではなく「候補科の案内」。救急度が高い症状は119・#7119などへ先に誘導する設計にする。</p>
         <img src="./assets/current-home-mobile.png" alt="現行スマホ表示" class="mini-shot">
       </section>
 
