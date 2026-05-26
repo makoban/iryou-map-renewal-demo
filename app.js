@@ -168,11 +168,11 @@ function renderSymptomResult(result) {
     target.classList.add("symptom-alert");
     target.innerHTML = `
       <strong>先に救急相談を案内</strong>
-      <p>緊急性が高い可能性があるため、検索結果より先に119または#7119などの救急相談を表示します。</p>
+      <p>緊急性が高い可能性があるため、受診先を探す前に119または#7119などの救急相談をおすすめします。</p>
       <div class="department-list">
         <button class="department-chip" type="button" data-department="救急外来">救急外来</button>
       </div>
-      <p class="symptom-next">医療MAPでは、その後に現在地周辺の救急対応施設を探す導線へ進めます。</p>
+      <p class="symptom-next">必要に応じて、その後に現在地周辺の救急対応施設を探せます。</p>
     `;
     return;
   }
@@ -183,7 +183,7 @@ function renderSymptomResult(result) {
     <div class="department-list">
       ${result.departments.map((department) => `<button class="department-chip" type="button" data-department="${department}">${department}</button>`).join("")}
     </div>
-    <p class="symptom-next">科目を押すと、地域検索に反映します。最終判断は医療機関・救急相談につなげる設計です。</p>
+    <p class="symptom-next">科目を押すと、近くの候補に進みます。迷うときは医療機関や救急相談へつなげます。</p>
   `;
 }
 

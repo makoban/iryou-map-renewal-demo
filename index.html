@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="description" content="医療MAPリニューアル提案用のWebアプリ試作。東海地方専門の医療機関検索を、地域、診療科、現在地、確認日つきで一番簡単に探せるUIサンプルです。">
-  <title>医療MAP リニューアルWebアプリ試作</title>
+  <meta name="description" content="東海地方専門の医療機関検索。地域、診療科、症状、現在地から、今日行ける受診先を一番簡単に探せる医療MAPの試作です。">
+  <title>医療MAP 東海地方専門の受診先検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
 </head>
@@ -20,23 +20,23 @@
     </a>
     <nav class="header-actions" aria-label="主要メニュー">
       <a href="#symptom">症状で探す</a>
-      <a href="#results">検索結果</a>
-      <a href="#detail">詳細</a>
-      <button class="ghost-button" type="button" data-open-panel="backstage">提案メニュー</button>
+      <a href="#results">近くの候補</a>
+      <a href="#detail">医院情報</a>
+      <button class="ghost-button" type="button" data-open-panel="backstage">説明メニュー</button>
     </nav>
   </header>
 
   <main>
     <section class="hero" id="home">
       <div class="hero-copy">
-        <p class="eyebrow">Googleマップではなく、受診先を決めるための地域医療ナビ</p>
+        <p class="eyebrow">東海で、今日行ける受診先をすぐ見つける</p>
         <img class="hero-lettering" src="./assets/premium-ui/premium-lettering.png" alt="" aria-hidden="true">
-        <h1 class="visually-hidden">東海地方専門。一番簡単な医療検索。</h1>
-        <p class="lead">東海地方の医療機関を、地域・診療科・現在地から最短検索。確認日、診療時間、電話、地図をひとつの画面にまとめます。</p>
+        <h1 class="visually-hidden">東海地方専門。一番簡単な医療検索。今日行ける受診先へ。</h1>
+        <p class="lead">地域、症状、診療科、現在地から、今の自分に合う候補をすぐ確認。診療時間、電話、地図まで迷わず進めます。</p>
         <div class="hero-points" aria-label="新しい医療MAPの特徴">
-          <span>3タップで候補へ</span>
+          <span>近くの候補へすぐ</span>
           <span>確認日つき</span>
-          <span>電話と地図を固定</span>
+          <span>電話・地図へすぐ</span>
         </div>
       </div>
 
@@ -68,7 +68,7 @@
       <div class="section-heading compact-heading">
         <p class="eyebrow">症状から探す</p>
         <h2>症状を入れるだけで、受診科の候補へ。</h2>
-        <p>文字入力または音声入力から、候補の診療科を絞ります。診断ではなく、受診先探しの補助として使う設計です。</p>
+        <p>何科に行けばよいか迷ったときに、症状から候補を確認できます。診断ではなく、受診先を探すための入口です。</p>
       </div>
 
       <div class="symptom-card">
@@ -79,7 +79,7 @@
             <button class="voice-button" type="button" data-action="voice-input">音声</button>
             <button class="symptom-submit" type="button" data-action="symptom-check">候補を見る</button>
           </div>
-          <p class="symptom-disclaimer">強い胸痛、息苦しさ、意識障害、ろれつが回らない等は、検索より先に119または救急相談を案内します。</p>
+          <p class="symptom-disclaimer">強い胸痛、息苦しさ、意識障害、ろれつが回らない等は、受診先検索より先に119または救急相談を案内します。</p>
         </div>
         <div class="symptom-result" id="symptom-result" aria-live="polite">
           <p class="result-empty">例: 子どもの発熱は小児科・内科、歯の痛みは歯科を候補にします。</p>
@@ -101,13 +101,13 @@
       <article>
         <span class="icon-badge generated-mini mini-map" aria-hidden="true"></span>
         <h2>東海地方専門</h2>
-        <p>地域の紙媒体・現地確認の強みをWebアプリに引き継ぎます。</p>
+        <p>東海地方の地域情報をもとに、近くの候補を探しやすくします。</p>
       </article>
     </section>
 
     <section class="app-layout" id="results">
       <div class="section-heading">
-        <p class="eyebrow">検索結果</p>
+        <p class="eyebrow">近くの候補</p>
         <h2>名古屋市千種区の内科</h2>
         <p>85件中、サンプル3件を表示。カードごとに電話・地図・詳細へ進めます。</p>
       </div>
@@ -170,15 +170,15 @@
 
     <section class="concept-section">
       <div class="section-heading">
-        <p class="eyebrow">デザイン方向性</p>
-        <h2>東海地方専門で、一番簡単なWebアプリUI</h2>
-        <p>トップは検索、結果はカード、詳細は診療時間と電話導線を優先。表の訴求は「東海地方専門」「一番簡単」に絞ります。</p>
+        <p class="eyebrow">使い方のイメージ</p>
+        <h2>東海地方で、今日行ける受診先へ。</h2>
+        <p>症状や地域を入れて候補を確認し、診療時間、電話、地図までそのまま進めます。</p>
       </div>
-      <img src="./assets/ui-simple-concept.png" alt="医療MAP シンプルUIコンセプト">
+      <img src="./assets/ui-simple-concept.png" alt="医療MAPで受診先を探す画面イメージ">
     </section>
   </main>
 
-  <aside class="panel" id="backstage" aria-hidden="true" aria-label="提案メニュー">
+  <aside class="panel" id="backstage" aria-hidden="true" aria-label="説明メニュー">
     <div class="panel-overlay" data-close-panel></div>
     <div class="panel-content">
       <div class="panel-head">
@@ -189,7 +189,7 @@
         <button class="icon-button" type="button" data-close-panel aria-label="閉じる">×</button>
       </div>
 
-      <nav class="panel-tabs" aria-label="提案資料タブ">
+      <nav class="panel-tabs" aria-label="説明資料タブ">
         <button class="active" type="button" data-tab="summary">要点</button>
         <button type="button" data-tab="audit">URL監査</button>
         <button type="button" data-tab="difference">差別化</button>
@@ -197,12 +197,12 @@
       </nav>
 
       <section class="tab-panel active" data-tab-panel="summary">
-        <h3>提案の中心</h3>
-        <p>LPではなく、トップから検索できるWebアプリにする。掲載営業ページは別導線に分け、一般利用者には「東海地方専門」「一番簡単」を前面に出す。</p>
+        <h3>見せ方の中心</h3>
+        <p>利用者には「東海地方専門」「一番簡単」「今日行ける受診先へ」を前面に出す。営業向けの説明や内部メモは裏メニューに分ける。</p>
         <div class="memo-grid">
           <article><strong>主価値</strong><span>東海地方専門の医療機関を確認日つきで探せる</span></article>
           <article><strong>ユーザー</strong><span>近所で今受診先を探している一般利用者</span></article>
-          <article><strong>開発側品質</strong><span>上質で美しいUI。ただし表の合言葉は一番簡単にする</span></article>
+          <article><strong>見せ方の方針</strong><span>上質で見やすく整える。ただし表の合言葉は一番簡単にする</span></article>
         </div>
         <p class="warning">症状入力は診断ではなく「候補科の案内」。救急度が高い症状は119・#7119などへ先に誘導する設計にする。</p>
         <img src="./assets/current-home-mobile.png" alt="現行スマホ表示" class="mini-shot">
@@ -226,13 +226,13 @@
       </section>
 
       <section class="tab-panel" data-tab-panel="difference">
-        <h3>Googleマップ・他サイトとの違い</h3>
+        <h3>他サービスとの違い</h3>
         <div class="compare-table">
-          <p><strong>Googleマップ</strong><span>場所・経路・口コミに強い。医療MAPは「受診先を決める」情報を整理する。</span></p>
-          <p><strong>医療情報ネット</strong><span>公式で網羅性が強い。医療MAPは地域ユーザー向けに簡単に見せる。</span></p>
-          <p><strong>EPARK</strong><span>予約・受付に強い。医療MAPは地域情報と電話導線に集中する。</span></p>
-          <p><strong>Caloo</strong><span>口コミに強い。医療MAPは確認日・地域密着を主軸にする。</span></p>
-          <p><strong>ドクターズ・ファイル</strong><span>取材記事に強い。医療MAPは一覧検索と生活目線フィルタを強化する。</span></p>
+          <p><strong>地域特化</strong><span>東海地方の医療機関に絞り、生活圏から探しやすくする。</span></p>
+          <p><strong>迷わない</strong><span>症状、地域、診療科、現在地から、候補科目と施設候補へすぐ進める。</span></p>
+          <p><strong>連絡しやすい</strong><span>電話、地図、診療時間、休診日をカード上で確認できる。</span></p>
+          <p><strong>確認日つき</strong><span>古い情報かどうかを判断しやすいよう、最終確認日を見せる。</span></p>
+          <p><strong>救急優先</strong><span>緊急性がありそうな症状は、施設検索より先に救急相談を案内する。</span></p>
         </div>
       </section>
 
@@ -245,14 +245,14 @@
           <li>施設詳細には構造化データ、最終確認日、修正依頼導線を入れる</li>
           <li>掲載希望LPはWebアプリ本体とは別導線にする</li>
         </ul>
-        <a class="wide-link" href="./reports/renewal_ui_direction.md" target="_blank">UI方向性メモを開く</a>
+        <a class="wide-link" href="./reports/renewal_ui_direction.md" target="_blank">方向性メモを開く</a>
       </section>
     </div>
   </aside>
 
   <footer class="site-footer">
-    <span>医療MAP リニューアル試作</span>
-    <button type="button" data-open-panel="backstage">提案メニューを開く</button>
+    <span>医療MAP 東海地方専門の受診先検索</span>
+    <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
   <script src="./app.js"></script>
