@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = __dirname;
 const port = Number(process.env.PORT || 4173);
-const geminiModel = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+const geminiModel = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
 const maxBodyBytes = 16 * 1024;
 
 const allowedDepartments = [

@@ -150,8 +150,13 @@ const departmentRules = [
 ];
 
 let currentResults = [];
-let chatTimer = 0;
+let aiIdleTimer = 0;
 let aiRequestSeq = 0;
+let geminiEndpointDisabled = false;
+
+const AI_IDLE_DELAY_MS = 750;
+const MIN_AI_QUERY_LENGTH = 2;
+const aiGuideCache = new Map();
 
 function uniqueItems(items, limit = 4) {
   return [...new Set(items)].slice(0, limit);
@@ -351,8 +356,7 @@ function summarizeAiGuide(query, result, guide = null) {
 }
 
 async function requestGeminiGuide(message) {
-  if (!["http:", "https:"].includes(window.location.protocol)) return null;
-  if (window.location.hostname.endsWith("github.io")) return null;
+  if (!canRequestAiGuide(message)) return null;
 
   const apiUrl = new URL("api/gemini-guide", window.location.href);
   const response = await fetch(apiUrl.href, {
@@ -361,17 +365,42 @@ async function requestGeminiGuide(message) {
     body: JSON.stringify({ message })
   });
 
-  if (!response.ok) return null;
-  const payload = await response.json();
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    if ([404, 405, 501].includes(response.status)) geminiEndpointDisabled = true;
+    return null;
+  }
+  if (payload?.code === "gemini_api_key_missing") geminiEndpointDisabled = true;
   return payload?.ok && payload.guide ? payload.guide : null;
+}
+
+function normalizeAiCacheKey(message) {
+  return String(message || "").replace(/\s+/g, " ").trim().slice(0, 600);
+}
+
+function canRequestAiGuide(message) {
+  const text = normalizeAiCacheKey(message);
+  if (text.length < MIN_AI_QUERY_LENGTH) return false;
+  if (geminiEndpointDisabled) return false;
+  if (!["http:", "https:"].includes(window.location.protocol)) return false;
+  if (window.location.hostname.endsWith("github.io")) return false;
+  return true;
 }
 
 function renderConversationResult(text, result, options = {}) {
   const log = document.querySelector("#conversation-log");
   const guide = normalizeGuideFromApi(options.guide);
+  const summaryLabel = guide.source === "gemini"
+    ? "AI補正 + 近さ順"
+    : options.pending
+      ? "入力中に即時更新"
+      : "入力内容 + 近さ順";
+  const copy = guide.source === "gemini"
+    ? "入力された言葉の意味を整理し、近さとマッチ度順で更新しています。"
+    : "入力中はすぐ候補を更新し、入力が止まったあと内容を整理します。";
   renderDepartmentNote(result, text, guide, "#conversation-guide");
   renderClinics(result.items);
-  updateResultHeader(`「${text}」の候補`, "会話の内容から条件を読み取り、近さとマッチ度順で更新しています。", "会話から自動更新");
+  updateResultHeader(`「${text}」の候補`, copy, summaryLabel);
   if (log) {
     log.textContent = `${text} ${summarizeAiGuide(text, result, guide)}${options.pending ? " 会話の内容を確認しています。" : ""}`;
   }
@@ -390,6 +419,7 @@ function runFuzzySearch(query, mode = "word") {
 }
 
 function renderNearbyResults() {
+  clearTimeout(aiIdleTimer);
   const result = searchClinics("現在地", "location");
   renderClinics(result.items);
   updateResultHeader("現在地から近い候補", "起動時は現在地に近い順を表示します。入力すると内容に合う候補へリアルタイムに変わります。", "現在地から近い順");
@@ -399,9 +429,35 @@ function renderNearbyResults() {
   if (log) log.textContent = "現在地から近い順で表示しています。";
 }
 
+async function refineConversationWithAi(text, requestId, localResult) {
+  const cacheKey = normalizeAiCacheKey(text);
+  if (!cacheKey) return;
+
+  if (aiGuideCache.has(cacheKey)) {
+    if (requestId !== aiRequestSeq) return;
+    const guide = aiGuideCache.get(cacheKey);
+    const result = searchClinics(text, "word", guide);
+    renderConversationResult(text, result, { guide });
+    return;
+  }
+
+  const guide = await requestGeminiGuide(text).catch(() => null);
+  if (requestId !== aiRequestSeq) return;
+
+  if (!guide) {
+    renderConversationResult(text, localResult);
+    return;
+  }
+
+  aiGuideCache.set(cacheKey, guide);
+  const result = searchClinics(text, "word", guide);
+  renderConversationResult(text, result, { guide });
+}
+
 function updateConversation(query, options = {}) {
   const text = query.trim();
   const requestId = ++aiRequestSeq;
+  clearTimeout(aiIdleTimer);
 
   if (!text) {
     renderNearbyResults();
@@ -409,21 +465,25 @@ function updateConversation(query, options = {}) {
   }
 
   const localResult = searchClinics(text, "word");
-  renderConversationResult(text, localResult, { pending: true });
+  const cacheKey = normalizeAiCacheKey(text);
+  if (aiGuideCache.has(cacheKey)) {
+    const guide = aiGuideCache.get(cacheKey);
+    const result = searchClinics(text, "word", guide);
+    renderConversationResult(text, result, { guide });
+    return;
+  }
 
-  requestGeminiGuide(text)
-    .then((guide) => {
-      if (requestId !== aiRequestSeq) return;
-      if (!guide) {
-        renderConversationResult(text, localResult);
-        return;
-      }
-      const result = searchClinics(text, "word", guide);
-      renderConversationResult(text, result, { guide });
-    })
-    .catch(() => {
-      if (requestId === aiRequestSeq) renderConversationResult(text, localResult);
-    });
+  const shouldUseAi = canRequestAiGuide(text);
+  renderConversationResult(text, localResult, { pending: shouldUseAi });
+
+  if (shouldUseAi) {
+    const runAi = () => refineConversationWithAi(text, requestId, localResult);
+    if (options.immediateAi) {
+      runAi();
+    } else {
+      aiIdleTimer = window.setTimeout(runAi, AI_IDLE_DELAY_MS);
+    }
+  }
 
   if (options.scroll) {
     document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
@@ -434,12 +494,11 @@ function renderWordBranch() {
   setupVoiceInput();
   const input = document.querySelector("#chat-input");
   input?.addEventListener("input", () => {
-    clearTimeout(chatTimer);
-    chatTimer = window.setTimeout(() => updateConversation(input.value), 120);
+    updateConversation(input.value);
   });
   input?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-      updateConversation(input.value, { scroll: true });
+      updateConversation(input.value, { scroll: true, immediateAi: true });
     }
   });
 }
@@ -497,7 +556,7 @@ function setupVoiceInput() {
     const text = [...event.results].map((result) => result[0]?.transcript || "").join("");
     if (text) {
       wordInput.value = text;
-      updateConversation(text, { scroll: true });
+      updateConversation(text, { scroll: true, immediateAi: true });
     }
   });
 

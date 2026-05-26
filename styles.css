@@ -1,12 +1,12 @@
 :root {
-  --bg: #f7faf9;
+  --bg: #f8fbfa;
   --surface: #ffffff;
-  --ink: #172426;
-  --muted: #66767a;
-  --line: #dce7e4;
-  --teal: #007c78;
-  --teal-dark: #00615e;
-  --teal-soft: #e6f5f3;
+  --ink: #182b2d;
+  --muted: #667a7d;
+  --line: #d9e9e5;
+  --teal: #008a83;
+  --teal-dark: #006862;
+  --teal-soft: #e8f7f5;
   --orange: #f59e0b;
   --orange-soft: #fff3df;
   --porcelain: #fbfefd;
@@ -26,8 +26,9 @@ html {
 body {
   margin: 0;
   background:
-    radial-gradient(circle at 18% 8%, rgba(255, 243, 223, 0.78), transparent 28%),
-    linear-gradient(180deg, #fbfefd 0%, #f3faf8 38%, #f7faf9 100%);
+    radial-gradient(circle at 12% 18%, rgba(255, 244, 225, 0.7), transparent 30%),
+    radial-gradient(circle at 88% 24%, rgba(222, 244, 241, 0.82), transparent 28%),
+    linear-gradient(180deg, #fffefd 0%, #f6fbfa 44%, #f8fbfa 100%);
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans",
     "Noto Sans JP", sans-serif;
@@ -143,11 +144,11 @@ main {
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(390px, 1.08fr);
-  gap: 34px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+  gap: 46px;
   align-items: center;
-  padding: 42px 0 22px;
-  min-height: 430px;
+  padding: 38px 0 24px;
+  min-height: 410px;
 }
 
 .hero-copy {
@@ -180,10 +181,11 @@ p {
 }
 
 h1 {
-  margin-bottom: 16px;
-  color: #0d3d3b;
-  font-size: 52px;
-  line-height: 1.08;
+  margin-bottom: 18px;
+  color: #123f3d;
+  font-size: 42px;
+  line-height: 1.18;
+  font-weight: 900;
   text-wrap: balance;
 }
 
@@ -191,8 +193,8 @@ h1 {
   margin: 0;
   max-width: 560px;
   color: var(--muted);
-  font-size: 17px;
-  line-height: 1.8;
+  font-size: 16px;
+  line-height: 1.9;
 }
 
 .search-surface,
@@ -223,9 +225,9 @@ h1 {
 }
 
 .search-intent {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   color: var(--teal-dark);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 900;
 }
 
@@ -308,24 +310,24 @@ h1 {
   position: relative;
   isolation: isolate;
   display: block;
-  min-height: 118px;
+  min-height: 126px;
   margin: 0;
-  padding: 12px;
+  padding: 16px 18px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 28px;
   background:
     #ffffff
     url("./assets/generated-ui/message-input-frame.png") center / 100% 100% no-repeat;
-  box-shadow: 0 18px 42px rgba(12, 70, 66, 0.08);
+  box-shadow: 0 20px 44px rgba(13, 74, 70, 0.09);
   transition: box-shadow 0.16s ease, transform 0.16s ease;
 }
 
 .message-box .conversation-row textarea {
   width: 100%;
-  height: 92px;
-  min-height: 92px;
-  max-height: 92px;
-  padding: 16px 106px 16px 16px;
+  height: 94px;
+  min-height: 94px;
+  max-height: 94px;
+  padding: 18px 124px 18px 16px;
   border: 0;
   border-radius: 8px;
   outline: 0;
@@ -350,12 +352,12 @@ h1 {
 
 .message-box .voice-button {
   position: absolute;
-  top: 18px;
-  right: 18px;
-  bottom: 18px;
-  width: 76px;
+  top: 24px;
+  right: 28px;
+  bottom: 24px;
+  width: 78px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 20px;
   background:
     #007c78
     url("./assets/generated-ui/message-mic-button.png") center / cover no-repeat;
@@ -363,7 +365,7 @@ h1 {
   font-size: 0;
   text-indent: -999px;
   overflow: hidden;
-  box-shadow: 0 12px 24px rgba(0, 124, 120, 0.2);
+  box-shadow: 0 14px 24px rgba(0, 124, 120, 0.18);
 }
 
 .message-box .voice-button:focus-visible {
@@ -904,10 +906,10 @@ h1 {
   display: flex;
   flex-direction: column;
   min-height: 340px;
-  padding: 22px;
+  padding: 24px;
   border: 0;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 16px 34px rgba(12, 70, 66, 0.07);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 38px rgba(12, 70, 66, 0.07);
 }
 
 .result-rank {
@@ -927,9 +929,9 @@ h1 {
   position: absolute;
   inset: 0;
   z-index: -1;
-  border-radius: 8px;
+  border-radius: 12px;
   background: url("./assets/generated-ui/result-frame-simple.png") center / 100% 100% no-repeat;
-  opacity: 0.55;
+  opacity: 0.74;
   pointer-events: none;
 }
 
@@ -1052,8 +1054,8 @@ h1 {
 .cta-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 12px;
+  gap: 9px;
+  margin-top: 14px;
 }
 
 .result-actions a,
@@ -1074,12 +1076,16 @@ h1 {
 }
 
 .generated-action {
-  border: 1px solid #b8d8d2 !important;
+  min-height: 46px;
+  padding: 8px 10px 8px 42px !important;
+  border: 0 !important;
   color: var(--teal-dark) !important;
   gap: 8px;
   text-shadow: none;
-  box-shadow: 0 8px 18px rgba(12, 70, 66, 0.06);
-  background: #ffffff !important;
+  box-shadow: none;
+  background: var(--action-bg) center / 100% 100% no-repeat !important;
+  font-size: 13px;
+  overflow: hidden;
 }
 
 .generated-action::before {
@@ -1097,28 +1103,20 @@ h1 {
 
 .result-actions a.generated-action.action-phone,
 .cta-row a.generated-action.action-phone {
-  --button-icon: url("./assets/generated-ui/circle-phone.png");
-  border-color: var(--teal) !important;
-  background: var(--teal) !important;
-  color: white !important;
-  box-shadow: 0 10px 22px rgba(0, 124, 120, 0.16);
+  --action-bg: url("./assets/generated-ui/action-phone-soft.png");
+  color: var(--teal-dark) !important;
 }
 
 .result-actions a.generated-action.action-map,
 .cta-row a.generated-action.action-map {
-  --button-icon: url("./assets/generated-ui/circle-map.png");
-  background: #ffffff !important;
-  color: var(--teal-dark) !important;
-  text-shadow: none;
+  --action-bg: url("./assets/generated-ui/action-map-soft.png");
+  color: #23679d !important;
 }
 
 .result-actions a.generated-action.action-detail,
 .cta-row a.generated-action.action-detail {
-  --button-icon: url("./assets/generated-ui/circle-detail.png");
-  background: #fff8ea !important;
-  border-color: #f4c87b !important;
-  color: #7b4b05 !important;
-  text-shadow: none;
+  --action-bg: url("./assets/generated-ui/action-detail-soft.png");
+  color: #98600a !important;
 }
 
 .action-detail span,
@@ -1462,12 +1460,13 @@ h1 {
   }
 
   .hero {
-    padding-top: 32px;
+    gap: 28px;
+    padding-top: 28px;
     min-height: auto;
   }
 
   h1 {
-    font-size: 44px;
+    font-size: 38px;
   }
 
   .section-heading h2 {
@@ -1513,7 +1512,8 @@ h1 {
   }
 
   h1 {
-    font-size: 34px;
+    font-size: 30px;
+    line-height: 1.2;
   }
 
   .section-heading h2 {
@@ -1548,23 +1548,25 @@ h1 {
   }
 
   .message-box .conversation-row {
-    min-height: 128px;
-    padding: 10px;
+    min-height: 120px;
+    padding: 10px 12px;
+    border-radius: 22px;
   }
 
   .message-box .conversation-row textarea {
-    height: 106px;
-    min-height: 106px;
-    max-height: 106px;
-    padding: 14px 82px 14px 14px;
+    height: 98px;
+    min-height: 98px;
+    max-height: 98px;
+    padding: 14px 84px 14px 12px;
     font-size: 16px;
   }
 
   .message-box .voice-button {
-    top: 22px;
-    right: 16px;
-    bottom: 22px;
-    width: 64px;
+    top: 26px;
+    right: 20px;
+    bottom: 26px;
+    width: 62px;
+    border-radius: 16px;
   }
 
   .branch-panel {
