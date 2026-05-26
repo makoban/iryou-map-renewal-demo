@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="description" content="東海地方専門の医療機関検索。地域、診療科、症状、現在地から、今日行ける受診先を一番簡単に探せる医療MAPの試作です。">
-  <title>医療MAP 東海地方専門の受診先検索</title>
+  <meta name="description" content="症状を伝えるだけで簡単検索。今から行ける受診先へ。東海地方専門の医療機関検索デモです。">
+  <title>医療MAP 症状を伝えるだけで簡単検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css?v=20260526-single-message">
+  <link rel="stylesheet" href="./styles.css?v=20260526-clean-ui">
 </head>
 <body>
   <header class="app-header">
@@ -15,7 +15,7 @@
       <span class="brand-mark">+</span>
       <span>
         <strong>医療MAP</strong>
-        <small>東海地方専門・一番簡単な医療検索</small>
+        <small>東海地方専門・今から行ける受診先へ</small>
       </span>
     </a>
     <nav class="header-actions" aria-label="主要メニュー">
@@ -27,19 +27,18 @@
     <section class="hero" id="home">
       <div class="hero-copy">
         <p class="eyebrow">東海で、今日行ける受診先をすぐ見つける</p>
-        <img class="hero-lettering" src="./assets/premium-ui/premium-lettering.png" alt="" aria-hidden="true">
-        <h1 class="visually-hidden">東海地方専門。一番簡単な医療検索。今日行ける受診先へ。</h1>
-        <p class="lead">地域、症状、診療科、現在地から、今の自分に合う候補をすぐ確認。診療時間、電話、地図まで迷わず進めます。</p>
+        <h1>症状を伝えるだけで簡単検索。<br>今から行ける受診先へ。</h1>
+        <p class="lead">東海地方専門。起動すると現在地に近い候補を表示し、入力した内容に合わせて近さとマッチ度順に並び替わります。</p>
       </div>
 
       <section class="search-surface" aria-label="病院検索">
-        <p class="search-intent">症状や希望を、そのまま入力</p>
+        <p class="search-intent">症状や希望をそのまま入力</p>
         <div class="message-box" id="branch-panel">
           <div class="conversation-branch">
             <label class="visually-hidden" for="chat-input">症状や希望を入力</label>
             <div class="conversation-row">
               <textarea id="chat-input" rows="2" placeholder="例: 足をひねった、子どもが熱っぽい、今から近くで診てほしい"></textarea>
-              <button class="voice-button" type="button" data-action="voice-input" aria-label="音声入力">マイク</button>
+              <button class="voice-button" type="button" data-action="voice-input" aria-label="音声入力">音声入力</button>
             </div>
             <div class="conversation-log visually-hidden" id="conversation-log" aria-live="polite"></div>
             <div class="conversation-guide visually-hidden" id="conversation-guide" aria-live="polite"></div>
@@ -133,10 +132,10 @@
         <p>利用者の前面操作はメッセージボックス1つだけにする。最初は現在地から近い順を表示し、入力内容に応じてAIまたはフォールバック分類で近さとマッチ度順に更新する。</p>
         <div class="memo-grid">
           <article><strong>入口</strong><span>メッセージボックスだけ</span></article>
-          <article><strong>AI</strong><span>Gemini APIで曖昧な症状・希望条件を構造化する</span></article>
+          <article><strong>AI</strong><span>Render本番はGemini APIで曖昧な症状・希望条件を構造化する</span></article>
           <article><strong>並び順</strong><span>近さとマッチ度を合わせて上位表示する</span></article>
         </div>
-        <p class="warning">Gemini APIキーはRenderの環境変数 GEMINI_API_KEY に置く。HTMLやJavaScriptには入れず、/api/gemini-guide が返したJSONで一覧を更新する。</p>
+        <p class="warning">現在のGitHub Pages版はAPIキーを置けないため、キーワード・ルールで即時更新するデモです。Render版は環境変数 GEMINI_API_KEY がある場合だけ /api/gemini-guide に送り、GeminiのJSONで一覧を再更新します。</p>
         <img src="./assets/current-home-mobile.png" alt="現行スマホ表示" class="mini-shot">
       </section>
 
@@ -148,6 +147,13 @@
           <li>404 7件</li>
           <li>リダイレクト 8件</li>
           <li>多くのページが PHP/5.2.4、1件のみ PHP/4.4.7</li>
+        </ul>
+        <h3>Windows施設リスト作成</h3>
+        <ul class="check-list">
+          <li>2026-05-26 17:11 完了</li>
+          <li>処理対象 2,067件、取得成功 2,060件、取得失敗 7件</li>
+          <li>施設一覧 10,782行、診療時間_raw 4,751行、外部HP候補 486行</li>
+          <li>救急対応あり 40件、夜間対応あり 73件、要確認 876件</li>
         </ul>
         <p class="warning">HTTPS証明書不一致は別途確認済み。フォームを扱うため、SSL移行は最優先。</p>
         <div class="report-links">
@@ -187,6 +193,6 @@
     <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
-  <script src="./app.js?v=20260526-single-message"></script>
+  <script src="./app.js?v=20260526-clean-ui"></script>
 </body>
 </html>

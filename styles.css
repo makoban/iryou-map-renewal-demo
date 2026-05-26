@@ -40,7 +40,8 @@ a {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
   letter-spacing: 0;
 }
@@ -145,8 +146,8 @@ main {
   grid-template-columns: minmax(0, 0.92fr) minmax(390px, 1.08fr);
   gap: 34px;
   align-items: center;
-  padding: 54px 0 30px;
-  min-height: 620px;
+  padding: 42px 0 22px;
+  min-height: 430px;
 }
 
 .hero-copy {
@@ -180,13 +181,15 @@ p {
 
 h1 {
   margin-bottom: 16px;
-  font-size: 58px;
+  color: #0d3d3b;
+  font-size: 52px;
   line-height: 1.08;
   text-wrap: balance;
 }
 
 .lead {
   margin: 0;
+  max-width: 560px;
   color: var(--muted);
   font-size: 17px;
   line-height: 1.8;
@@ -206,36 +209,23 @@ h1 {
 .search-surface {
   position: relative;
   isolation: isolate;
-  min-height: 250px;
-  padding: 46px 48px 34px;
-  overflow: hidden;
+  min-height: 0;
+  padding: 12px 0;
+  overflow: visible;
   border: 0;
   background: transparent;
   box-shadow: none;
 }
 
-.search-surface::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  background: url("./assets/premium-ui/premium-search-frame.png") center / 100% 100% no-repeat;
-}
-
+.search-surface::before,
 .search-surface::after {
-  content: "";
-  position: absolute;
-  inset: 18px;
-  z-index: -1;
-  border-radius: 8px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.24));
-  pointer-events: none;
+  content: none;
 }
 
 .search-intent {
-  margin: 0 0 14px;
+  margin: 0 0 12px;
   color: var(--teal-dark);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 900;
 }
 
@@ -311,13 +301,23 @@ h1 {
 }
 
 .message-box {
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .message-box .conversation-row {
   position: relative;
+  isolation: isolate;
   display: block;
+  min-height: 118px;
   margin: 0;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background:
+    #ffffff
+    url("./assets/generated-ui/message-input-frame.png") center / 100% 100% no-repeat;
+  box-shadow: 0 18px 42px rgba(12, 70, 66, 0.08);
+  transition: box-shadow 0.16s ease, transform 0.16s ease;
 }
 
 .message-box .conversation-row textarea {
@@ -325,17 +325,23 @@ h1 {
   height: 92px;
   min-height: 92px;
   max-height: 92px;
-  padding: 18px 104px 18px 18px;
-  border: 1px solid #a9cac4;
+  padding: 16px 106px 16px 16px;
+  border: 0;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.94);
+  outline: 0;
+  background: transparent;
   color: var(--ink);
+  font-size: 18px;
   line-height: 1.55;
   resize: none;
   overflow: auto;
+  box-shadow: none;
+}
+
+.message-box .conversation-row:focus-within {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.86),
-    0 14px 28px rgba(12, 70, 66, 0.08);
+    0 0 0 3px rgba(0, 124, 120, 0.12),
+    0 18px 42px rgba(12, 70, 66, 0.1);
 }
 
 .message-box .conversation-row textarea::placeholder {
@@ -344,17 +350,36 @@ h1 {
 
 .message-box .voice-button {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  bottom: 10px;
-  width: 78px;
+  top: 18px;
+  right: 18px;
+  bottom: 18px;
+  width: 76px;
   border: 0;
   border-radius: 8px;
-  background: linear-gradient(180deg, #078c86, #006f6b);
-  color: white;
-  font-size: 13px;
-  font-weight: 900;
-  box-shadow: 0 12px 24px rgba(0, 124, 120, 0.22);
+  background:
+    #007c78
+    url("./assets/generated-ui/message-mic-button.png") center / cover no-repeat;
+  color: transparent;
+  font-size: 0;
+  text-indent: -999px;
+  overflow: hidden;
+  box-shadow: 0 12px 24px rgba(0, 124, 120, 0.2);
+}
+
+.message-box .voice-button:focus-visible {
+  outline: 3px solid rgba(0, 124, 120, 0.22);
+  outline-offset: 3px;
+}
+
+.message-box .voice-button.is-listening {
+  box-shadow:
+    0 0 0 5px rgba(0, 124, 120, 0.12),
+    0 12px 24px rgba(0, 124, 120, 0.2);
+}
+
+.message-box .voice-button[disabled] {
+  filter: grayscale(1);
+  opacity: 0.5;
 }
 
 .branch-empty,
@@ -882,7 +907,7 @@ h1 {
   padding: 22px;
   border: 0;
   background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 18px 42px rgba(12, 70, 66, 0.08);
+  box-shadow: 0 16px 34px rgba(12, 70, 66, 0.07);
 }
 
 .result-rank {
@@ -900,11 +925,11 @@ h1 {
 .result-card::before {
   content: "";
   position: absolute;
-  inset: -4px;
+  inset: 0;
   z-index: -1;
   border-radius: 8px;
-  background: url("./assets/premium-ui/premium-result-frame.png") center / 100% 100% no-repeat;
-  opacity: 0.62;
+  background: url("./assets/generated-ui/result-frame-simple.png") center / 100% 100% no-repeat;
+  opacity: 0.55;
   pointer-events: none;
 }
 
@@ -1049,25 +1074,16 @@ h1 {
 }
 
 .generated-action {
-  border: 0 !important;
-  color: white !important;
+  border: 1px solid #b8d8d2 !important;
+  color: var(--teal-dark) !important;
   gap: 8px;
-  text-shadow: 0 1px 7px rgba(0,0,0,0.22);
-  box-shadow: 0 12px 26px rgba(0, 124, 120, 0.16);
-  background: url("./assets/premium-ui/premium-cta-teal.png") center / 100% 100% no-repeat !important;
+  text-shadow: none;
+  box-shadow: 0 8px 18px rgba(12, 70, 66, 0.06);
+  background: #ffffff !important;
 }
 
 .generated-action::before {
-  content: "";
-  flex: 0 0 26px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background-image: var(--button-icon);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  content: none;
 }
 
 .generated-action span {
@@ -1082,12 +1098,16 @@ h1 {
 .result-actions a.generated-action.action-phone,
 .cta-row a.generated-action.action-phone {
   --button-icon: url("./assets/generated-ui/circle-phone.png");
+  border-color: var(--teal) !important;
+  background: var(--teal) !important;
+  color: white !important;
+  box-shadow: 0 10px 22px rgba(0, 124, 120, 0.16);
 }
 
 .result-actions a.generated-action.action-map,
 .cta-row a.generated-action.action-map {
   --button-icon: url("./assets/generated-ui/circle-map.png");
-  background: url("./assets/premium-ui/premium-cta-soft.png") center / 100% 100% no-repeat !important;
+  background: #ffffff !important;
   color: var(--teal-dark) !important;
   text-shadow: none;
 }
@@ -1095,8 +1115,9 @@ h1 {
 .result-actions a.generated-action.action-detail,
 .cta-row a.generated-action.action-detail {
   --button-icon: url("./assets/generated-ui/circle-detail.png");
-  background: url("./assets/premium-ui/premium-cta-orange.png") center / 100% 100% no-repeat !important;
-  color: #6c3900 !important;
+  background: #fff8ea !important;
+  border-color: #f4c87b !important;
+  color: #7b4b05 !important;
   text-shadow: none;
 }
 
@@ -1460,8 +1481,8 @@ h1 {
   }
 
   .search-surface {
-    min-height: 230px;
-    padding: 38px 28px 30px;
+    min-height: 0;
+    padding: 8px 0 0;
   }
 
   .quick-grid {
@@ -1522,20 +1543,28 @@ h1 {
   }
 
   .search-surface {
-    min-height: 218px;
-    padding: 30px 18px 24px;
+    min-height: 0;
+    padding: 4px 0 0;
+  }
+
+  .message-box .conversation-row {
+    min-height: 128px;
+    padding: 10px;
   }
 
   .message-box .conversation-row textarea {
-    height: 112px;
-    min-height: 112px;
-    max-height: 112px;
-    padding-right: 86px;
+    height: 106px;
+    min-height: 106px;
+    max-height: 106px;
+    padding: 14px 82px 14px 14px;
+    font-size: 16px;
   }
 
   .message-box .voice-button {
-    width: 68px;
-    font-size: 12px;
+    top: 22px;
+    right: 16px;
+    bottom: 22px;
+    width: 64px;
   }
 
   .branch-panel {

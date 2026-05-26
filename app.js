@@ -475,9 +475,8 @@ function setupVoiceInput() {
   if (!voiceButton || !wordInput) return;
 
   if (!SpeechRecognition) {
-    voiceButton.disabled = true;
-    voiceButton.textContent = "非対応";
     voiceButton.title = "このブラウザでは音声入力に対応していません";
+    voiceButton.addEventListener("click", () => wordInput.focus());
     return;
   }
 
@@ -487,9 +486,11 @@ function setupVoiceInput() {
   recognition.maxAlternatives = 1;
 
   recognition.addEventListener("start", () => {
+    voiceButton.classList.add("is-listening");
     voiceButton.textContent = "聞き取り中";
   });
   recognition.addEventListener("end", () => {
+    voiceButton.classList.remove("is-listening");
     voiceButton.textContent = "音声";
   });
   recognition.addEventListener("result", (event) => {
