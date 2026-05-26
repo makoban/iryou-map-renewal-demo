@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="医療MAPリニューアル提案用のWebアプリ試作。東海の医療機関を地域、診療科、現在地、確認日つきで簡単に探せるUIサンプルです。">
   <title>医療MAP リニューアルWebアプリ試作</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
@@ -14,7 +15,7 @@
       <span class="brand-mark">+</span>
       <span>
         <strong>医療MAP</strong>
-        <small>東海の医療機関を確認日つきで探せる</small>
+        <small>一番簡単で美しい地域医療検索</small>
       </span>
     </a>
     <nav class="header-actions" aria-label="主要メニュー">
@@ -28,11 +29,18 @@
     <section class="hero" id="home">
       <div class="hero-copy">
         <p class="eyebrow">Googleマップではなく、受診先を決めるための地域医療ナビ</p>
-        <h1>今日行ける病院を、地域からすぐ探す。</h1>
-        <p class="lead">診療科目、地域、現在地、休日診療をひとつの画面に整理。電話・地図・診療時間まで迷わず進めるシンプルなWebアプリ案です。</p>
+        <img class="hero-lettering" src="./assets/premium-ui/premium-lettering.png" alt="" aria-hidden="true">
+        <h1 class="visually-hidden">一番簡単で美しい、地域医療検索。</h1>
+        <p class="lead">東海の医療機関を、地域・診療科・現在地から最短検索。確認日、診療時間、電話、地図をひとつの画面にまとめます。</p>
+        <div class="hero-points" aria-label="新しい医療MAPの特徴">
+          <span>3タップで候補へ</span>
+          <span>確認日つき</span>
+          <span>電話と地図を固定</span>
+        </div>
       </div>
 
       <section class="search-surface" aria-label="病院検索">
+        <p class="search-intent">いま知りたい条件だけ選ぶ</p>
         <label class="search-label" for="main-search">地域・診療科目・病院名</label>
         <div class="search-row">
           <input id="main-search" type="search" placeholder="例: 千種区 内科 / 名古屋駅 歯科" value="名古屋市千種区 内科">
@@ -139,8 +147,8 @@
     <section class="concept-section">
       <div class="section-heading">
         <p class="eyebrow">デザイン方向性</p>
-        <h2>シンプルなWebアプリUI</h2>
-        <p>トップは検索、結果はカード、詳細は診療時間と電話導線を優先します。</p>
+        <h2>競合より、簡単で美しいWebアプリUI</h2>
+        <p>トップは検索、結果はカード、詳細は診療時間と電話導線を優先。見た目は生成素材で上げ、情報はHTMLで読みやすく残します。</p>
       </div>
       <img src="./assets/ui-simple-concept.png" alt="医療MAP シンプルUIコンセプト">
     </section>

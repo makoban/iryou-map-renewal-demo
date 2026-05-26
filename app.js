@@ -9,7 +9,8 @@ const clinics = [
     station: "今池駅 徒歩2分",
     distance: "約220m",
     hours: "9:00-12:30 / 15:30-18:30",
-    holiday: "木曜午後・日曜・祝日"
+    holiday: "木曜午後・日曜・祝日",
+    verified: "確認日 2026.05"
   },
   {
     name: "星ヶ丘内科医院",
@@ -21,7 +22,8 @@ const clinics = [
     station: "星ヶ丘駅 徒歩5分",
     distance: "約380m",
     hours: "9:00-12:30 / 16:00-19:00",
-    holiday: "水曜午後・土曜午後・日曜"
+    holiday: "水曜午後・土曜午後・日曜",
+    verified: "確認日 2026.04"
   },
   {
     name: "東山内科クリニック",
@@ -33,7 +35,8 @@ const clinics = [
     station: "東山公園駅 徒歩6分",
     distance: "約450m",
     hours: "9:00-12:00 / 15:00-18:00",
-    holiday: "木曜・日曜・祝日"
+    holiday: "木曜・日曜・祝日",
+    verified: "確認日 2026.03"
   }
 ];
 
@@ -45,6 +48,7 @@ function renderClinics() {
       <div class="result-top">
         <div>
           <span class="status ${clinic.statusClass}">${clinic.status}</span>
+          <span class="verified-pill">${clinic.verified}</span>
           <h3>${clinic.name}</h3>
           <p>${clinic.departments}</p>
         </div>
