@@ -162,10 +162,13 @@ const departmentRules = [
 
 let currentResults = [];
 let aiIdleTimer = 0;
+let searchIdleTimer = 0;
 let aiRequestSeq = 0;
 let geminiEndpointDisabled = false;
+let wordBranchBound = false;
 
-const AI_IDLE_DELAY_MS = 750;
+const SEARCH_IDLE_DELAY_MS = 1400;
+const AI_IDLE_DELAY_MS = 800;
 const MIN_AI_QUERY_LENGTH = 2;
 const LOCATION_STORAGE_KEY = "iryouMapLocationPrefs";
 const LOCATION_AUTO_SESSION_KEY = "iryouMapAutoLocationTried";
@@ -834,11 +837,13 @@ function renderConversationResult(text, result, options = {}) {
   const summaryLabel = guide.source === "gemini"
     ? "AI補正 + 近さ順"
     : options.pending
-      ? "入力中に即時更新"
+      ? "AI確認中 + 近さ順"
       : "入力内容 + 近さ順";
   const copy = guide.source === "gemini"
     ? "AIで整理しました。"
-    : "入力に合わせて更新中。";
+    : options.pending
+      ? "入力停止後に更新。AIでも確認中です。"
+      : "入力停止後に更新しました。";
   renderDepartmentNote(result, text, guide, "#conversation-guide");
   renderClinics(result.items);
   updateResultHeader(`「${text}」の候補`, copy, summaryLabel);
@@ -861,6 +866,7 @@ function runFuzzySearch(query, mode = "word") {
 
 function renderNearbyResults() {
   clearTimeout(aiIdleTimer);
+  clearTimeout(searchIdleTimer);
   const result = searchClinics("現在地", "location");
   renderClinics(result.items);
   const hasGpsDistance = hasCoordinates(userLocation) && hasAnyFacilityCoordinates();
@@ -924,6 +930,7 @@ function updateConversation(query, options = {}) {
   const text = query.trim();
   const requestId = ++aiRequestSeq;
   clearTimeout(aiIdleTimer);
+  clearTimeout(searchIdleTimer);
 
   if (!text) {
     renderNearbyResults();
@@ -956,14 +963,61 @@ function updateConversation(query, options = {}) {
   }
 }
 
+function renderSearchPending(query) {
+  const text = query.trim();
+  clearTimeout(aiIdleTimer);
+  const guidePanel = document.querySelector("#conversation-guide");
+  const log = document.querySelector("#conversation-log");
+  if (guidePanel) guidePanel.innerHTML = "";
+
+  if (!text) {
+    updateResultHeader("入力を待っています", "入力が止まってから近い候補を表示します。", "入力停止後に検索");
+    if (log) log.textContent = "入力が止まってから候補を更新します。";
+    return;
+  }
+
+  updateResultHeader(`「${text}」を入力中`, "入力が止まってから候補を更新します。", "約1.4秒後に検索");
+  if (log) log.textContent = `「${text}」の入力が止まってから候補を更新します。`;
+}
+
+function scheduleConversationUpdate(query) {
+  const text = query.trim();
+  clearTimeout(searchIdleTimer);
+  clearTimeout(aiIdleTimer);
+  aiRequestSeq += 1;
+
+  if (!text) {
+    renderNearbyResults();
+    return;
+  }
+
+  renderSearchPending(text);
+  searchIdleTimer = window.setTimeout(() => {
+    updateConversation(text);
+  }, SEARCH_IDLE_DELAY_MS);
+}
+
 function renderWordBranch() {
-  setupVoiceInput();
   const input = document.querySelector("#chat-input");
-  input?.addEventListener("input", () => {
-    updateConversation(input.value);
+  if (!input || wordBranchBound) return;
+  wordBranchBound = true;
+  setupVoiceInput();
+  let isComposing = false;
+
+  input.addEventListener("compositionstart", () => {
+    isComposing = true;
+    renderSearchPending(input.value);
   });
-  input?.addEventListener("keydown", (event) => {
+  input.addEventListener("compositionend", () => {
+    isComposing = false;
+    scheduleConversationUpdate(input.value);
+  });
+  input.addEventListener("input", () => {
+    if (!isComposing) scheduleConversationUpdate(input.value);
+  });
+  input.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      clearTimeout(searchIdleTimer);
       updateConversation(input.value, { scroll: true, immediateAi: true });
     }
   });
