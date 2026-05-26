@@ -7,7 +7,7 @@
   <meta name="description" content="東海地方専門の医療機関検索。地域、診療科、症状、現在地から、今日行ける受診先を一番簡単に探せる医療MAPの試作です。">
   <title>医療MAP 東海地方専門の受診先検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css?v=20260526-layout-lock">
+  <link rel="stylesheet" href="./styles.css?v=20260526-single-message">
 </head>
 <body>
   <header class="app-header">
@@ -33,22 +33,17 @@
       </div>
 
       <section class="search-surface" aria-label="病院検索">
-        <p class="search-intent">最初に選ぶのは、2つだけ</p>
-        <div class="start-actions" aria-label="検索方法">
-          <button class="start-button word-button" type="button" data-mode="word" aria-expanded="false">
-            <span class="start-icon" aria-hidden="true">話</span>
-            <strong>ことばで伝える</strong>
-            <small>話すたびに候補が変わる</small>
-          </button>
-          <button class="start-button location-button" type="button" data-mode="location" aria-expanded="false">
-            <span class="start-icon" aria-hidden="true">◎</span>
-            <strong>現在地で探す</strong>
-            <small>近い候補をすぐ表示</small>
-          </button>
-        </div>
-
-        <div class="branch-panel" id="branch-panel" aria-live="polite">
-          <p class="branch-empty">上のどちらかを押すと、次の入力だけ表示します。</p>
+        <p class="search-intent">症状や希望を、そのまま入力</p>
+        <div class="message-box" id="branch-panel">
+          <div class="conversation-branch">
+            <label class="visually-hidden" for="chat-input">症状や希望を入力</label>
+            <div class="conversation-row">
+              <textarea id="chat-input" rows="2" placeholder="例: 足をひねった、子どもが熱っぽい、今から近くで診てほしい"></textarea>
+              <button class="voice-button" type="button" data-action="voice-input" aria-label="音声入力">マイク</button>
+            </div>
+            <div class="conversation-log visually-hidden" id="conversation-log" aria-live="polite"></div>
+            <div class="conversation-guide visually-hidden" id="conversation-guide" aria-live="polite"></div>
+          </div>
         </div>
       </section>
     </section>
@@ -135,9 +130,9 @@
 
       <section class="tab-panel active" data-tab-panel="summary">
         <h3>見せ方の中心</h3>
-        <p>利用者の前面操作は「ことばで伝える」「現在地で探す」の2つだけにする。Render上では話すたびにGemini APIが条件を整理し、近さとマッチ度順に候補一覧を更新する。</p>
+        <p>利用者の前面操作はメッセージボックス1つだけにする。最初は現在地から近い順を表示し、入力内容に応じてAIまたはフォールバック分類で近さとマッチ度順に更新する。</p>
         <div class="memo-grid">
-          <article><strong>入口</strong><span>会話、または現在地だけ</span></article>
+          <article><strong>入口</strong><span>メッセージボックスだけ</span></article>
           <article><strong>AI</strong><span>Gemini APIで曖昧な症状・希望条件を構造化する</span></article>
           <article><strong>並び順</strong><span>近さとマッチ度を合わせて上位表示する</span></article>
         </div>
@@ -166,7 +161,7 @@
         <h3>他サービスとの違い</h3>
         <div class="compare-table">
           <p><strong>地域特化</strong><span>東海地方の医療機関に絞り、生活圏から探しやすくする。</span></p>
-          <p><strong>迷わない</strong><span>入口は会話と現在地だけ。細かい条件はAIが会話から拾い、一覧へ反映する。</span></p>
+          <p><strong>迷わない</strong><span>入口はメッセージボックスだけ。細かい条件はAIが会話から拾い、一覧へ反映する。</span></p>
           <p><strong>連絡しやすい</strong><span>電話、地図、診療時間、休診日をカード上で確認できる。</span></p>
           <p><strong>確認日つき</strong><span>古い情報かどうかを判断しやすいよう、最終確認日を見せる。</span></p>
           <p><strong>救急優先</strong><span>緊急性がありそうな症状は、施設検索より先に救急相談を案内する。</span></p>
@@ -192,6 +187,6 @@
     <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
-  <script src="./app.js?v=20260526-layout-lock"></script>
+  <script src="./app.js?v=20260526-single-message"></script>
 </body>
 </html>

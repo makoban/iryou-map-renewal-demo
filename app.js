@@ -48,6 +48,22 @@ const clinics = [
     keywords: ["子ども", "子供", "こども", "小児", "赤ちゃん", "発熱", "熱", "咳", "アレルギー"]
   },
   {
+    name: "今池整形外科クリニック",
+    status: "診療中",
+    statusClass: "open",
+    until: "18:45まで",
+    departments: "整形外科・リハビリテーション科",
+    departmentList: ["整形外科", "リハビリテーション科"],
+    address: "名古屋市千種区今池4-6-10",
+    station: "今池駅 徒歩3分",
+    distance: "約260m",
+    distanceMeters: 260,
+    hours: "9:00-12:30 / 15:30-18:45",
+    holiday: "木曜午後・土曜午後・日曜・祝日",
+    verified: "確認日 2026.05",
+    keywords: ["整形外科", "けが", "怪我", "足", "脚", "足首", "腕", "手", "肘", "膝", "腰", "肩", "骨", "骨折", "関節", "ねんざ", "捻挫", "打撲", "痛めた", "スポーツ"]
+  },
+  {
     name: "星ヶ丘内科医院",
     status: "午前診療",
     statusClass: "soon",
@@ -113,7 +129,7 @@ const departmentRules = [
   },
   {
     departments: ["整形外科"],
-    keywords: ["腰", "膝", "肩", "骨", "関節", "ねんざ", "捻挫", "打撲", "けが", "痛めた"]
+    keywords: ["足", "脚", "足首", "腕", "手", "肘", "腰", "膝", "肩", "骨", "骨折", "関節", "ねんざ", "捻挫", "打撲", "けが", "怪我", "痛めた", "転んだ", "ぶつけた", "スポーツ"]
   },
   {
     departments: ["内科", "消化器内科"],
@@ -186,7 +202,7 @@ function findDepartments(text) {
 
   return {
     type: "normal",
-    departments: uniqueItems(matched.length ? matched : ["内科"])
+    departments: uniqueItems(matched)
   };
 }
 
@@ -336,6 +352,7 @@ function summarizeAiGuide(query, result, guide = null) {
 
 async function requestGeminiGuide(message) {
   if (!["http:", "https:"].includes(window.location.protocol)) return null;
+  if (window.location.hostname.endsWith("github.io")) return null;
 
   const apiUrl = new URL("api/gemini-guide", window.location.href);
   const response = await fetch(apiUrl.href, {
@@ -351,17 +368,13 @@ async function requestGeminiGuide(message) {
 
 function renderConversationResult(text, result, options = {}) {
   const log = document.querySelector("#conversation-log");
-  if (!log) return;
-
   const guide = normalizeGuideFromApi(options.guide);
   renderDepartmentNote(result, text, guide, "#conversation-guide");
   renderClinics(result.items);
   updateResultHeader(`「${text}」の候補`, "会話の内容から条件を読み取り、近さとマッチ度順で更新しています。", "会話から自動更新");
-  log.innerHTML = `
-    <p><strong>あなた</strong> ${escapeHtml(text)}</p>
-    <p><strong>案内</strong> ${escapeHtml(summarizeAiGuide(text, result, guide))}</p>
-    ${options.pending ? "<p><small>会話の内容を確認しています。</small></p>" : ""}
-  `;
+  if (log) {
+    log.textContent = `${text} ${summarizeAiGuide(text, result, guide)}${options.pending ? " 会話の内容を確認しています。" : ""}`;
+  }
 }
 
 function runFuzzySearch(query, mode = "word") {
@@ -376,18 +389,22 @@ function runFuzzySearch(query, mode = "word") {
   document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
 }
 
+function renderNearbyResults() {
+  const result = searchClinics("現在地", "location");
+  renderClinics(result.items);
+  updateResultHeader("現在地から近い候補", "起動時は現在地に近い順を表示します。入力すると内容に合う候補へリアルタイムに変わります。", "現在地から近い順");
+  const guidePanel = document.querySelector("#conversation-guide");
+  if (guidePanel) guidePanel.innerHTML = "";
+  const log = document.querySelector("#conversation-log");
+  if (log) log.textContent = "現在地から近い順で表示しています。";
+}
+
 function updateConversation(query, options = {}) {
   const text = query.trim();
-  const log = document.querySelector("#conversation-log");
-  if (!log) return;
   const requestId = ++aiRequestSeq;
 
   if (!text) {
-    log.innerHTML = `
-      <p><strong>AI</strong> 例: 子どもが熱っぽい、今から行ける近くの小児科を探したい</p>
-    `;
-    const guidePanel = document.querySelector("#conversation-guide");
-    if (guidePanel) guidePanel.innerHTML = "";
+    renderNearbyResults();
     return;
   }
 
@@ -414,28 +431,11 @@ function updateConversation(query, options = {}) {
 }
 
 function renderWordBranch() {
-  const panel = document.querySelector("#branch-panel");
-  if (!panel) return;
-  panel.innerHTML = `
-    <div class="conversation-branch">
-      <div class="conversation-log" id="conversation-log" aria-live="polite">
-        <p><strong>AI</strong> 例: 子どもが熱っぽい、今から行ける近くの小児科を探したい</p>
-      </div>
-      <div class="conversation-guide" id="conversation-guide" aria-live="polite"></div>
-      <label for="chat-input">AIに伝える内容</label>
-      <div class="conversation-row">
-        <textarea id="chat-input" rows="2" placeholder="話す、または入力してください"></textarea>
-        <button class="voice-button" type="button" data-action="voice-input">音声</button>
-      </div>
-      <p>入力中も一覧が変わります。科目名が分からなくてもそのまま話せます。</p>
-    </div>
-  `;
   setupVoiceInput();
   const input = document.querySelector("#chat-input");
-  input?.focus();
   input?.addEventListener("input", () => {
     clearTimeout(chatTimer);
-    chatTimer = window.setTimeout(() => updateConversation(input.value), 220);
+    chatTimer = window.setTimeout(() => updateConversation(input.value), 120);
   });
   input?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
@@ -549,5 +549,6 @@ function bindEvents() {
   });
 }
 
-renderClinics(searchClinics("現在地", "location").items);
+renderWordBranch();
+renderNearbyResults();
 bindEvents();

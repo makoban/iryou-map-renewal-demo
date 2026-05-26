@@ -117,10 +117,11 @@ async function requestGeminiGuide(message) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return {
-      statusCode: 503,
+      statusCode: 200,
       payload: {
         ok: false,
         code: "gemini_api_key_missing",
+        fallback: true,
         message: "Renderの環境変数 GEMINI_API_KEY が未設定です。"
       }
     };
