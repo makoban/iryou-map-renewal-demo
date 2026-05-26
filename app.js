@@ -1,16 +1,51 @@
 const clinics = [
   {
+    name: "千種歯科クリニック",
+    status: "診療中",
+    statusClass: "open",
+    until: "19:00まで",
+    departments: "歯科・口腔外科",
+    departmentList: ["歯科", "口腔外科"],
+    address: "名古屋市千種区今池1-4-8",
+    station: "今池駅 徒歩1分",
+    distance: "約180m",
+    distanceMeters: 180,
+    hours: "9:30-13:00 / 15:00-19:00",
+    holiday: "木曜・日曜・祝日",
+    verified: "確認日 2026.05",
+    keywords: ["歯", "歯科", "虫歯", "歯ぐき", "親知らず", "口内炎", "今池"]
+  },
+  {
     name: "千種内科クリニック",
     status: "診療中",
     statusClass: "open",
     until: "18:30まで",
     departments: "内科・循環器内科・小児科",
+    departmentList: ["内科", "循環器内科", "小児科"],
     address: "名古屋市千種区今池1-2-3",
     station: "今池駅 徒歩2分",
     distance: "約220m",
+    distanceMeters: 220,
     hours: "9:00-12:30 / 15:30-18:30",
     holiday: "木曜午後・日曜・祝日",
-    verified: "確認日 2026.05"
+    verified: "確認日 2026.05",
+    keywords: ["内科", "発熱", "熱", "咳", "せき", "胸", "今池", "循環器"]
+  },
+  {
+    name: "今池こどもクリニック",
+    status: "診療中",
+    statusClass: "open",
+    until: "18:00まで",
+    departments: "小児科・アレルギー科",
+    departmentList: ["小児科", "アレルギー科"],
+    address: "名古屋市千種区内山3-8-2",
+    station: "今池駅 徒歩4分",
+    distance: "約290m",
+    distanceMeters: 290,
+    hours: "9:00-12:00 / 15:00-18:00",
+    holiday: "土曜午後・日曜・祝日",
+    verified: "確認日 2026.04",
+    keywords: ["子ども", "子供", "こども", "小児", "赤ちゃん", "発熱", "熱", "咳", "アレルギー"]
   },
   {
     name: "星ヶ丘内科医院",
@@ -18,25 +53,31 @@ const clinics = [
     statusClass: "soon",
     until: "12:30まで",
     departments: "内科・消化器内科",
+    departmentList: ["内科", "消化器内科"],
     address: "名古屋市千種区星が丘元町15-7",
     station: "星ヶ丘駅 徒歩5分",
     distance: "約380m",
+    distanceMeters: 380,
     hours: "9:00-12:30 / 16:00-19:00",
     holiday: "水曜午後・土曜午後・日曜",
-    verified: "確認日 2026.04"
+    verified: "確認日 2026.04",
+    keywords: ["内科", "腹痛", "お腹", "胃", "吐き気", "下痢", "星ヶ丘"]
   },
   {
-    name: "東山内科クリニック",
-    status: "休診中",
-    statusClass: "closed",
-    until: "本日休診",
-    departments: "内科・糖尿病内科",
+    name: "東山皮ふ科クリニック",
+    status: "午後診療",
+    statusClass: "soon",
+    until: "19:00まで",
+    departments: "皮膚科・小児皮膚科",
+    departmentList: ["皮膚科", "小児皮膚科"],
     address: "名古屋市千種区東山通5-10",
     station: "東山公園駅 徒歩6分",
     distance: "約450m",
-    hours: "9:00-12:00 / 15:00-18:00",
+    distanceMeters: 450,
+    hours: "9:00-12:00 / 15:00-19:00",
     holiday: "木曜・日曜・祝日",
-    verified: "確認日 2026.03"
+    verified: "確認日 2026.03",
+    keywords: ["皮膚", "湿疹", "かゆみ", "かぶれ", "発疹", "じんましん", "東山"]
   }
 ];
 
@@ -92,11 +133,92 @@ const departmentRules = [
   }
 ];
 
-function renderClinics() {
+let currentResults = [];
+let chatTimer = 0;
+
+function uniqueItems(items) {
+  return [...new Set(items)].slice(0, 4);
+}
+
+function findDepartments(text) {
+  const query = text.trim();
+  if (!query) return { type: "empty", departments: [] };
+
+  if (emergencyKeywords.some((keyword) => query.includes(keyword))) {
+    return { type: "emergency", departments: ["救急相談", "救急外来"] };
+  }
+
+  const matched = [];
+  departmentRules.forEach((rule) => {
+    if (rule.keywords.some((keyword) => query.includes(keyword))) {
+      matched.push(...rule.departments);
+    }
+  });
+
+  return {
+    type: "normal",
+    departments: uniqueItems(matched.length ? matched : ["内科"])
+  };
+}
+
+function scoreClinic(clinic, query, departments, mode) {
+  const text = `${clinic.name} ${clinic.departments} ${clinic.address} ${clinic.station} ${clinic.keywords.join(" ")}`;
+  const departmentMatches = departments.filter((department) => clinic.departmentList.includes(department)).length;
+  const keywordMatches = clinic.keywords.filter((keyword) => query.includes(keyword)).length;
+  const keywordHit = keywordMatches > 0 || text.includes(query);
+  const childIntentPoint = /子ども|子供|こども|幼児|赤ちゃん/.test(query) && clinic.keywords.includes("子ども") ? 18 : 0;
+  const specialtyPoint = childIntentPoint && clinic.departmentList[0]?.includes("小児") ? 24 : 0;
+  const distancePoint = Math.max(0, 30 - Math.round(clinic.distanceMeters / 30));
+  const exactPoint = query && text.includes(query) ? 18 : 0;
+  const departmentPoint = Math.min(38, departmentMatches * 22);
+  const keywordPoint = Math.min(32, keywordMatches * 12 + (keywordHit ? 8 : 0));
+  const locationPoint = mode === "location" ? 18 : 0;
+  const match = mode === "location"
+    ? Math.min(98, 72 + Math.round(distancePoint * 0.6))
+    : Math.min(98, 42 + departmentPoint + keywordPoint + exactPoint + childIntentPoint);
+  const rank = match + distancePoint + locationPoint + specialtyPoint;
+
+  return {
+    ...clinic,
+    match,
+    rank
+  };
+}
+
+function searchClinics(query = "", mode = "word") {
+  const departmentResult = mode === "word" ? findDepartments(query) : { type: "normal", departments: [] };
+  if (departmentResult.type === "emergency") {
+    return {
+      type: "emergency",
+      departments: departmentResult.departments,
+      items: clinics
+        .map((clinic) => scoreClinic(clinic, query, [], "location"))
+        .sort((a, b) => a.distanceMeters - b.distanceMeters)
+        .slice(0, 3)
+    };
+  }
+
+  const departments = departmentResult.departments;
+  const scored = clinics
+    .map((clinic) => scoreClinic(clinic, query, departments, mode))
+    .sort((a, b) => b.rank - a.rank || a.distanceMeters - b.distanceMeters)
+    .slice(0, 3);
+
+  return {
+    type: "normal",
+    departments,
+    items: scored
+  };
+}
+
+function renderClinics(items = currentResults) {
   const list = document.querySelector("#clinic-list");
   if (!list) return;
-  list.innerHTML = clinics.map((clinic) => `
+  const results = items.length ? items : searchClinics("現在地", "location").items;
+  currentResults = results;
+  list.innerHTML = results.map((clinic, index) => `
     <article class="result-card">
+      <div class="result-rank">#${index + 1} 近さ ${clinic.distance} / マッチ度 ${clinic.match}%</div>
       <div class="result-top">
         <div>
           <span class="status ${clinic.statusClass}">${clinic.status}</span>
@@ -124,80 +246,147 @@ function renderClinics() {
   `).join("");
 }
 
-function uniqueDepartments(items) {
-  return [...new Set(items)].slice(0, 4);
+function updateResultHeader(label, copy, summary) {
+  document.querySelector("#results-title").textContent = label;
+  document.querySelector("#results-copy").textContent = copy;
+  document.querySelector("#result-summary").innerHTML = `
+    <span>並び順</span>
+    <strong>${summary}</strong>
+  `;
 }
 
-function findDepartments(symptomText) {
-  const text = symptomText.trim();
-  if (!text) {
-    return { type: "empty", departments: [] };
-  }
-
-  if (emergencyKeywords.some((keyword) => text.includes(keyword))) {
-    return {
-      type: "emergency",
-      departments: ["救急相談", "救急外来"]
-    };
-  }
-
-  const matched = [];
-  departmentRules.forEach((rule) => {
-    if (rule.keywords.some((keyword) => text.includes(keyword))) {
-      matched.push(...rule.departments);
-    }
-  });
-
-  return {
-    type: "normal",
-    departments: uniqueDepartments(matched.length ? matched : ["内科"])
-  };
-}
-
-function renderSymptomResult(result) {
-  const target = document.querySelector("#symptom-result");
-  if (!target) return;
-
-  if (result.type === "empty") {
-    target.classList.remove("symptom-alert");
-    target.innerHTML = `<p class="result-empty">例: 子どもの発熱は小児科・内科、歯の痛みは歯科を候補にします。</p>`;
-    return;
-  }
+function renderDepartmentNote(result, query) {
+  const panel = document.querySelector("#branch-panel");
+  if (!panel) return;
 
   if (result.type === "emergency") {
-    target.classList.add("symptom-alert");
-    target.innerHTML = `
-      <strong>先に救急相談を案内</strong>
-      <p>緊急性が高い可能性があるため、受診先を探す前に119または#7119などの救急相談をおすすめします。</p>
-      <div class="department-list">
-        <button class="department-chip" type="button" data-department="救急外来">救急外来</button>
+    panel.innerHTML = `
+      <div class="branch-note branch-alert">
+        <strong>先に救急相談をおすすめします</strong>
+        <p>「${query}」は緊急性が高い可能性があります。受診先を探す前に119または#7119などの救急相談を確認してください。</p>
+        <p>下には、現在地に近い候補を表示しています。</p>
       </div>
-      <p class="symptom-next">必要に応じて、その後に現在地周辺の救急対応施設を探せます。</p>
     `;
     return;
   }
 
-  target.classList.remove("symptom-alert");
-  target.innerHTML = `
-    <strong>候補の診療科</strong>
-    <div class="department-list">
-      ${result.departments.map((department) => `<button class="department-chip" type="button" data-department="${department}">${department}</button>`).join("")}
+  const departments = result.departments.length ? result.departments : ["近くの医療機関"];
+  panel.innerHTML = `
+    <div class="branch-note">
+      <strong>「${query || "現在地"}」に近い候補</strong>
+      <div class="department-list" aria-label="推定した候補科目">
+        ${departments.map((department) => `<span class="department-chip">${department}</span>`).join("")}
+      </div>
+      <p>細かい条件を選ばなくても、近さとマッチ度で上から並べます。</p>
     </div>
-    <p class="symptom-next">科目を押すと、近くの候補に進みます。迷うときは医療機関や救急相談へつなげます。</p>
   `;
 }
 
-function runSymptomCheck() {
-  const input = document.querySelector("#symptom-input");
-  if (!input) return;
-  renderSymptomResult(findDepartments(input.value));
+function summarizeAiGuide(query, result) {
+  if (result.type === "emergency") {
+    return "緊急性が高い可能性があります。受診先検索より先に119または救急相談を確認してください。";
+  }
+
+  const departments = result.departments.length ? result.departments.join("、") : "近くの医療機関";
+  return `「${query}」から、${departments}を候補にしました。近さとマッチ度が高い順に並べています。`;
+}
+
+function runFuzzySearch(query, mode = "word") {
+  const result = searchClinics(query, mode);
+  renderDepartmentNote(result, query);
+  renderClinics(result.items);
+  const label = mode === "location" ? "現在地から近い候補" : `「${query}」の候補`;
+  const copy = mode === "location"
+    ? "現在地に近い順を中心に、診療中と確認日も見ながら表示します。"
+    : "入力した言葉に近い科目と、現在地からの近さを合わせて表示します。";
+  updateResultHeader(label, copy, "近い順 + マッチ度順");
+  document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
+}
+
+function updateConversation(query, options = {}) {
+  const text = query.trim();
+  const log = document.querySelector("#conversation-log");
+  if (!log) return;
+
+  if (!text) {
+    log.innerHTML = `
+      <p><strong>AI</strong> 例: 子どもが熱っぽい、今から行ける近くの小児科を探したい</p>
+    `;
+    return;
+  }
+
+  const result = searchClinics(text, "word");
+  renderClinics(result.items);
+  updateResultHeader(`「${text}」の候補`, "会話の内容から条件を読み取り、近さとマッチ度順で更新しています。", "会話から自動更新");
+  log.innerHTML = `
+    <p><strong>あなた</strong> ${text}</p>
+    <p><strong>AI</strong> ${summarizeAiGuide(text, result)}</p>
+  `;
+
+  if (options.scroll) {
+    document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
+  }
+}
+
+function renderWordBranch() {
+  const panel = document.querySelector("#branch-panel");
+  if (!panel) return;
+  panel.innerHTML = `
+    <div class="conversation-branch">
+      <div class="conversation-log" id="conversation-log" aria-live="polite">
+        <p><strong>AI</strong> 例: 子どもが熱っぽい、今から行ける近くの小児科を探したい</p>
+      </div>
+      <label for="chat-input">AIに伝える内容</label>
+      <div class="conversation-row">
+        <textarea id="chat-input" rows="2" placeholder="話す、または入力してください"></textarea>
+        <button class="voice-button" type="button" data-action="voice-input">音声</button>
+      </div>
+      <p>入力中も一覧が変わります。科目名が分からなくてもそのまま話せます。</p>
+    </div>
+  `;
+  setupVoiceInput();
+  const input = document.querySelector("#chat-input");
+  input?.focus();
+  input?.addEventListener("input", () => {
+    clearTimeout(chatTimer);
+    chatTimer = window.setTimeout(() => updateConversation(input.value), 220);
+  });
+  input?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      updateConversation(input.value, { scroll: true });
+    }
+  });
+}
+
+function activateMode(mode) {
+  document.querySelectorAll("[data-mode]").forEach((button) => {
+    const active = button.dataset.mode === mode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-expanded", active ? "true" : "false");
+  });
+
+  if (mode === "word") {
+    renderWordBranch();
+    return;
+  }
+
+  const panel = document.querySelector("#branch-panel");
+  if (panel) {
+    panel.innerHTML = `
+      <div class="branch-note">
+        <strong>現在地に近い候補を表示しました</strong>
+        <p>デモでは名古屋市千種区周辺として、距離が近い候補を上から並べます。</p>
+      </div>
+    `;
+  }
+  runFuzzySearch("現在地", "location");
 }
 
 function setupVoiceInput() {
   const voiceButton = document.querySelector("[data-action='voice-input']");
-  const symptomInput = document.querySelector("#symptom-input");
+  const wordInput = document.querySelector("#chat-input");
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!voiceButton || !symptomInput) return;
+  if (!voiceButton || !wordInput) return;
 
   if (!SpeechRecognition) {
     voiceButton.disabled = true;
@@ -208,7 +397,7 @@ function setupVoiceInput() {
 
   const recognition = new SpeechRecognition();
   recognition.lang = "ja-JP";
-  recognition.interimResults = false;
+  recognition.interimResults = true;
   recognition.maxAlternatives = 1;
 
   recognition.addEventListener("start", () => {
@@ -218,10 +407,10 @@ function setupVoiceInput() {
     voiceButton.textContent = "音声";
   });
   recognition.addEventListener("result", (event) => {
-    const text = event.results?.[0]?.[0]?.transcript;
+    const text = [...event.results].map((result) => result[0]?.transcript || "").join("");
     if (text) {
-      symptomInput.value = text;
-      runSymptomCheck();
+      wordInput.value = text;
+      updateConversation(text, { scroll: true });
     }
   });
 
@@ -264,31 +453,8 @@ function bindEvents() {
     button.addEventListener("click", () => activateTab(button.dataset.tab));
   });
 
-  document.querySelectorAll("[data-chip]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const input = document.querySelector("#main-search");
-      const current = input.value.trim();
-      input.value = current ? `${current} ${button.dataset.chip}` : button.dataset.chip;
-      document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
-    });
-  });
-
-  document.querySelector("[data-action='run-search']")?.addEventListener("click", () => {
-    document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
-  });
-
-  document.querySelector("[data-action='symptom-check']")?.addEventListener("click", runSymptomCheck);
-
-  document.querySelector("#symptom-input")?.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") runSymptomCheck();
-  });
-
-  document.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-department]");
-    if (!button) return;
-    const input = document.querySelector("#main-search");
-    if (input) input.value = `名古屋市千種区 ${button.dataset.department}`;
-    document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
+  document.querySelectorAll("[data-mode]").forEach((button) => {
+    button.addEventListener("click", () => activateMode(button.dataset.mode));
   });
 
   document.addEventListener("keydown", (event) => {
@@ -297,6 +463,5 @@ function bindEvents() {
   });
 }
 
-renderClinics();
-setupVoiceInput();
+renderClinics(searchClinics("現在地", "location").items);
 bindEvents();
