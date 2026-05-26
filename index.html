@@ -7,7 +7,7 @@
   <meta name="description" content="症状を伝えるだけで簡単検索。今から行ける受診先へ。東海地方専門の医療機関検索デモです。">
   <title>医療MAP 症状を伝えるだけで簡単検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css?v=20260526-refined-design">
+  <link rel="stylesheet" href="./styles.css?v=20260527-location-settings">
 </head>
 <body>
   <header class="app-header">
@@ -44,6 +44,10 @@
             <div class="conversation-log visually-hidden" id="conversation-log" aria-live="polite"></div>
             <div class="conversation-guide visually-hidden" id="conversation-guide" aria-live="polite"></div>
           </div>
+        </div>
+        <div class="location-chip" id="location-chip" aria-live="polite">
+          <span>近さ</span>
+          <strong>現在地を確認中</strong>
         </div>
       </section>
     </section>
@@ -117,6 +121,7 @@
         <button class="active" type="button" data-tab="summary">要点</button>
         <button type="button" data-tab="audit">URL監査</button>
         <button type="button" data-tab="difference">差別化</button>
+        <button type="button" data-tab="location">設定</button>
         <button type="button" data-tab="migration">移行</button>
       </nav>
 
@@ -167,6 +172,23 @@
         </div>
       </section>
 
+      <section class="tab-panel" data-tab-panel="location">
+        <h3>現在地設定</h3>
+        <p>GPSが使える場合は現在地を使います。GPSが読めない場合や施設側の緯度経度が未整備の場合は、保存した住所で近さを補正します。</p>
+        <div class="setting-card">
+          <strong>近さの基準</strong>
+          <p id="location-status">現在地を確認中</p>
+          <button class="wide-link" type="button" data-action="use-current-location">現在地を使う</button>
+          <label class="setting-label" for="fallback-address">GPSが使えない時の住所</label>
+          <input id="fallback-address" type="text" autocomplete="street-address" placeholder="例: 愛知県犬山市 / 名古屋市千種区今池">
+          <div class="settings-actions">
+            <button type="button" data-action="save-fallback-address">住所を保存</button>
+            <button type="button" data-action="clear-location">設定を消す</button>
+          </div>
+        </div>
+        <p class="warning">本番では施設住所を一括ジオコードして緯度経度を持たせます。このデモは、緯度経度がある施設はGPS実距離、未整備の施設は住所の市区町村一致で並び替えます。</p>
+      </section>
+
       <section class="tab-panel" data-tab-panel="migration">
         <h3>移行で守ること</h3>
         <ul class="check-list">
@@ -186,6 +208,6 @@
     <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
-  <script src="./app.js?v=20260526-refined-design"></script>
+  <script src="./app.js?v=20260527-location-settings"></script>
 </body>
 </html>

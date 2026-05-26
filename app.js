@@ -98,6 +98,15 @@ const fallbackClinics = [
 ];
 
 let clinics = fallbackClinics;
+let userLocation = {
+  source: "none",
+  lat: null,
+  lng: null,
+  address: "",
+  areaTokens: []
+};
+let locationBusy = false;
+let locationMessage = "";
 
 const emergencyKeywords = [
   "胸痛", "胸が痛", "息苦し", "呼吸困難", "意識", "ろれつ", "麻痺",
@@ -158,6 +167,8 @@ let geminiEndpointDisabled = false;
 
 const AI_IDLE_DELAY_MS = 750;
 const MIN_AI_QUERY_LENGTH = 2;
+const LOCATION_STORAGE_KEY = "iryouMapLocationPrefs";
+const LOCATION_AUTO_SESSION_KEY = "iryouMapAutoLocationTried";
 const aiGuideCache = new Map();
 
 function uniqueItems(items, limit = 4) {
@@ -182,9 +193,272 @@ function displayValue(value, fallback = "未確認") {
   return text || fallback;
 }
 
+function toFiniteNumber(value) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const text = String(value ?? "").trim();
+  if (!text) return null;
+  const number = Number(text.replace(/,/g, ""));
+  return Number.isFinite(number) ? number : null;
+}
+
 function normalizeUrl(value) {
   const text = String(value ?? "").trim();
   return /^https?:\/\//.test(text) ? text : "";
+}
+
+function hasCoordinates(item) {
+  return Number.isFinite(item?.lat) && Number.isFinite(item?.lng);
+}
+
+function extractAreaTokens(address) {
+  const text = String(address ?? "").replace(/\s+/g, "").trim();
+  if (!text) return [];
+  const tokens = [];
+  const add = (token) => {
+    const cleaned = String(token ?? "").trim();
+    if (cleaned.length >= 2 && !tokens.includes(cleaned)) tokens.push(cleaned);
+  };
+
+  const prefecture = text.match(/^(愛知県|岐阜県|三重県|静岡県)/)?.[1];
+  add(prefecture);
+
+  const withoutPrefecture = text.replace(/^(愛知県|岐阜県|三重県|静岡県)/, "");
+  const unitMatches = withoutPrefecture.match(/[^0-9０-９丁目番地号\-ー、,]+?(?:市|区|町|村)/g) || [];
+  unitMatches.forEach(add);
+  if (unitMatches.length >= 2) add(`${unitMatches[0]}${unitMatches[1]}`);
+
+  const shortArea = withoutPrefecture.replace(/[0-9０-９丁目番地号\-ー].*$/, "").slice(0, 12);
+  add(shortArea);
+
+  return tokens.slice(0, 8);
+}
+
+function loadLocationPrefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOCATION_STORAGE_KEY) || "{}");
+    const lat = toFiniteNumber(saved.lat);
+    const lng = toFiniteNumber(saved.lng);
+    const address = String(saved.address || "").trim();
+    userLocation = {
+      source: hasCoordinates({ lat, lng }) ? "gps" : address ? "address" : "none",
+      lat,
+      lng,
+      address,
+      areaTokens: extractAreaTokens(address)
+    };
+  } catch {
+    userLocation = { source: "none", lat: null, lng: null, address: "", areaTokens: [] };
+  }
+}
+
+function saveLocationPrefs() {
+  localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify({
+    source: userLocation.source,
+    lat: userLocation.lat,
+    lng: userLocation.lng,
+    address: userLocation.address
+  }));
+}
+
+function clearLocationPrefs() {
+  localStorage.removeItem(LOCATION_STORAGE_KEY);
+  userLocation = { source: "none", lat: null, lng: null, address: "", areaTokens: [] };
+  locationMessage = "現在地設定を消しました。";
+  updateLocationUi();
+  rerenderCurrentSearch();
+}
+
+function formatDistance(meters) {
+  if (!Number.isFinite(meters)) return "距離未設定";
+  if (meters < 1000) return `約${Math.max(10, Math.round(meters / 10) * 10)}m`;
+  const digits = meters < 10000 ? 1 : 0;
+  return `約${(meters / 1000).toFixed(digits)}km`;
+}
+
+function haversineMeters(fromLat, fromLng, toLat, toLng) {
+  const radius = 6371000;
+  const toRadians = (degree) => degree * Math.PI / 180;
+  const deltaLat = toRadians(toLat - fromLat);
+  const deltaLng = toRadians(toLng - fromLng);
+  const a = Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(toRadians(fromLat)) * Math.cos(toRadians(toLat)) *
+    Math.sin(deltaLng / 2) ** 2;
+  return Math.round(radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+function areaTokenWeight(token) {
+  if (/県$/.test(token)) return 4;
+  if (/市.+区$/.test(token)) return 26;
+  if (/[市区町村]$/.test(token)) return 18;
+  return 8;
+}
+
+function computeProximity(clinic) {
+  const gpsReady = hasCoordinates(userLocation);
+  const clinicHasCoordinates = hasCoordinates(clinic);
+  if (gpsReady && clinicHasCoordinates) {
+    const meters = haversineMeters(userLocation.lat, userLocation.lng, clinic.lat, clinic.lng);
+    return {
+      source: "gps",
+      label: formatDistance(meters),
+      distanceMeters: meters,
+      point: Math.max(0, 38 - Math.round(meters / 250)),
+      matchedArea: ""
+    };
+  }
+
+  const addressText = String(clinic.address || "");
+  const matchedTokens = userLocation.areaTokens.filter((token) => addressText.includes(token));
+  if (matchedTokens.length) {
+    const point = Math.min(34, matchedTokens.reduce((sum, token) => sum + areaTokenWeight(token), 0));
+    const bestToken = matchedTokens
+      .slice()
+      .sort((a, b) => areaTokenWeight(b) - areaTokenWeight(a) || b.length - a.length)[0];
+    return {
+      source: "address",
+      label: `${bestToken}周辺`,
+      distanceMeters: null,
+      point,
+      matchedArea: bestToken
+    };
+  }
+
+  if (!gpsReady && Number.isFinite(clinic.distanceMeters)) {
+    return {
+      source: "preset",
+      label: clinic.distance,
+      distanceMeters: clinic.distanceMeters,
+      point: Math.max(0, 30 - Math.round(clinic.distanceMeters / 30)),
+      matchedArea: ""
+    };
+  }
+
+  return {
+    source: gpsReady ? "gps-waiting" : "none",
+    label: clinic.distance,
+    distanceMeters: Number.isFinite(clinic.distanceMeters) ? clinic.distanceMeters : null,
+    point: 0,
+    matchedArea: ""
+  };
+}
+
+function hasAnyFacilityCoordinates() {
+  return clinics.some(hasCoordinates);
+}
+
+function locationShortLabel() {
+  if (locationBusy) return "GPS取得中";
+  if (hasCoordinates(userLocation) && userLocation.address) return `GPS + ${userLocation.address}`;
+  if (hasCoordinates(userLocation)) return "GPS現在地";
+  if (userLocation.address) return `${userLocation.address} 周辺`;
+  return "未設定";
+}
+
+function locationStatusLabel() {
+  if (locationBusy) return "現在地を取得しています。";
+  if (locationMessage) return locationMessage;
+  if (hasCoordinates(userLocation) && userLocation.address) {
+    return "GPS取得済み。施設側の緯度経度が無い場合は、保存住所で近さを補正します。";
+  }
+  if (hasCoordinates(userLocation)) {
+    return "GPS取得済み。施設側の緯度経度があるデータは実距離で並びます。";
+  }
+  if (userLocation.address) {
+    return "保存住所で近さを補正しています。";
+  }
+  return "未設定です。GPSを許可するか、住所を保存してください。";
+}
+
+function updateLocationUi() {
+  const chip = document.querySelector("#location-chip");
+  const status = document.querySelector("#location-status");
+  const addressInput = document.querySelector("#fallback-address");
+  const label = locationShortLabel();
+
+  if (chip) {
+    chip.classList.toggle("is-active", label !== "未設定" && label !== "GPS取得中");
+    chip.innerHTML = `<span>近さ</span><strong>${escapeHtml(label)}</strong>`;
+  }
+  if (status) status.textContent = locationStatusLabel();
+  if (addressInput && document.activeElement !== addressInput) {
+    addressInput.value = userLocation.address;
+  }
+}
+
+function canUseGeolocation() {
+  const localHost = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+  return Boolean(navigator.geolocation) && (window.isSecureContext || localHost);
+}
+
+function requestPosition() {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 8000,
+      maximumAge: 60000
+    });
+  });
+}
+
+async function requestCurrentLocation(options = {}) {
+  if (!canUseGeolocation()) {
+    locationMessage = "この環境ではGPSを使えません。代替住所を保存してください。";
+    updateLocationUi();
+    return false;
+  }
+
+  locationBusy = true;
+  locationMessage = "";
+  updateLocationUi();
+
+  try {
+    const position = await requestPosition();
+    const lat = toFiniteNumber(position.coords.latitude);
+    const lng = toFiniteNumber(position.coords.longitude);
+    if (!hasCoordinates({ lat, lng })) throw new Error("invalid_position");
+
+    userLocation = {
+      source: "gps",
+      lat,
+      lng,
+      address: userLocation.address,
+      areaTokens: extractAreaTokens(userLocation.address)
+    };
+    saveLocationPrefs();
+    locationMessage = hasAnyFacilityCoordinates()
+      ? "GPS取得済み。現在地からの実距離で近さを反映しています。"
+      : "GPS取得済み。施設側の緯度経度追加後は実距離で並びます。代替住所を入れると現データでも近さ補正できます。";
+    return true;
+  } catch {
+    locationMessage = "GPSを取得できませんでした。代替住所を保存してください。";
+    return false;
+  } finally {
+    locationBusy = false;
+    updateLocationUi();
+    if (options.rerender !== false) rerenderCurrentSearch();
+  }
+}
+
+function saveFallbackAddress() {
+  const addressInput = document.querySelector("#fallback-address");
+  const address = String(addressInput?.value || "").trim();
+  if (!address) {
+    locationMessage = "住所が空です。例: 愛知県犬山市 のように入力してください。";
+    updateLocationUi();
+    return;
+  }
+
+  userLocation = {
+    source: hasCoordinates(userLocation) ? "gps" : "address",
+    lat: userLocation.lat,
+    lng: userLocation.lng,
+    address,
+    areaTokens: extractAreaTokens(address)
+  };
+  saveLocationPrefs();
+  locationMessage = "住所を保存しました。GPSが使えない時はこの住所で近さを補正します。";
+  updateLocationUi();
+  rerenderCurrentSearch();
 }
 
 function buildMapUrl(clinic) {
@@ -223,7 +497,9 @@ function normalizeFacility(item, index = 0) {
     address: displayValue(item.address),
     station: displayValue(item.station, "最寄り未確認"),
     distance: displayValue(item.distance, "距離未設定"),
-    distanceMeters: Number.isFinite(item.distanceMeters) ? item.distanceMeters : null,
+    distanceMeters: toFiniteNumber(item.distanceMeters),
+    lat: toFiniteNumber(item.lat ?? item.latitude),
+    lng: toFiniteNumber(item.lng ?? item.lon ?? item.longitude),
     hours: displayValue(item.hours),
     holiday: displayValue(item.holiday),
     verified: displayValue(item.verified, "確認日未確認"),
@@ -308,20 +584,25 @@ function scoreClinic(clinic, query, departments, mode, guideKeywords = []) {
   const keywordHit = keywordMatches > 0 || guideKeywordMatches > 0 || (query && text.includes(query));
   const childIntentPoint = /子ども|子供|こども|幼児|赤ちゃん/.test(query) && clinic.keywords.includes("子ども") ? 18 : 0;
   const specialtyPoint = childIntentPoint && clinic.departmentList[0]?.includes("小児") ? 24 : 0;
-  const hasDistance = Number.isFinite(clinic.distanceMeters);
-  const distancePoint = hasDistance ? Math.max(0, 30 - Math.round(clinic.distanceMeters / 30)) : 0;
+  const proximity = computeProximity(clinic);
+  const distancePoint = proximity.point;
   const exactPoint = query && text.includes(query) ? 18 : 0;
   const departmentPoint = Math.min(38, departmentMatches * 22);
   const keywordPoint = Math.min(36, keywordMatches * 12 + guideKeywordMatches * 10 + (keywordHit ? 8 : 0));
-  const locationPoint = mode === "location" ? 18 : 0;
+  const hasActiveLocation = hasCoordinates(userLocation) || userLocation.areaTokens.length > 0;
+  const locationPoint = mode === "location" ? (hasActiveLocation ? 24 : 18) : 0;
   const qualityPoint = Math.min(28, Math.round((clinic.qualityScore || 0) / 3));
   const match = mode === "location"
-    ? Math.min(98, 48 + Math.round(distancePoint * 0.6) + qualityPoint)
+    ? Math.min(98, 42 + Math.round(distancePoint * 0.75) + qualityPoint)
     : Math.min(98, 32 + departmentPoint + keywordPoint + exactPoint + childIntentPoint + Math.round(qualityPoint * 0.35));
   const rank = match + distancePoint + locationPoint + specialtyPoint + qualityPoint;
 
   return {
     ...clinic,
+    distance: proximity.label,
+    distanceMeters: proximity.distanceMeters,
+    proximitySource: proximity.source,
+    matchedArea: proximity.matchedArea,
     match,
     rank
   };
@@ -354,6 +635,19 @@ function searchClinics(query = "", mode = "word", guide = null) {
   };
 }
 
+function buildRankText(clinic, index) {
+  if (clinic.proximitySource === "gps") {
+    return `#${index + 1} 近さ ${escapeHtml(clinic.distance)} / マッチ度 ${clinic.match}%`;
+  }
+  if (clinic.proximitySource === "address") {
+    return `#${index + 1} ${escapeHtml(clinic.distance)} / マッチ度 ${clinic.match}%`;
+  }
+  if (clinic.distanceMeters === null) {
+    return `#${index + 1} マッチ度 ${clinic.match}% / 情報充実度 ${clinic.qualityScore || 0}`;
+  }
+  return `#${index + 1} 近さ ${escapeHtml(clinic.distance)} / マッチ度 ${clinic.match}%`;
+}
+
 function renderClinics(items = currentResults) {
   const list = document.querySelector("#clinic-list");
   if (!list) return;
@@ -361,10 +655,7 @@ function renderClinics(items = currentResults) {
   currentResults = results;
   list.innerHTML = results.map((clinic, index) => {
     const phoneHref = clinic.phone ? `tel:${clinic.phone.replace(/[^\d+]/g, "")}` : "";
-    const mapHref = buildMapUrl(clinic);
-    const rankText = clinic.distanceMeters === null
-      ? `#${index + 1} マッチ度 ${clinic.match}% / 情報充実度 ${clinic.qualityScore || 0}`
-      : `#${index + 1} 近さ ${escapeHtml(clinic.distance)} / マッチ度 ${clinic.match}%`;
+    const rankText = buildRankText(clinic, index);
     return `
       <article class="result-card">
         <div class="result-rank">${rankText}</div>
@@ -432,6 +723,7 @@ function renderDetail(clinic = currentResults[0]) {
   name.textContent = clinic.name;
   meta.textContent = `${clinic.departments} / ${clinic.address}`;
   fields.innerHTML = `
+    <p><strong>近さ</strong><span>${escapeHtml(clinic.distance)}</span></p>
     <p><strong>住所</strong><span>${escapeHtml(clinic.address)}</span></p>
     <p><strong>電話</strong><span>${escapeHtml(displayValue(clinic.phone))}</span></p>
     <p><strong>診療科目</strong><span>${escapeHtml(clinic.departments)}</span></p>
@@ -559,7 +851,7 @@ function runFuzzySearch(query, mode = "word") {
   const result = searchClinics(query, mode);
   renderDepartmentNote(result, query);
   renderClinics(result.items);
-  const label = mode === "location" ? "現在地から近い候補" : `「${query}」の候補`;
+  const label = mode === "location" ? `${locationShortLabel()}に近い候補` : `「${query}」の候補`;
   const copy = mode === "location"
     ? "現在地から表示。"
     : "入力に合わせて表示。";
@@ -571,11 +863,36 @@ function renderNearbyResults() {
   clearTimeout(aiIdleTimer);
   const result = searchClinics("現在地", "location");
   renderClinics(result.items);
-  updateResultHeader("掲載情報が多い候補", "入力すると更新します。", "情報充実度 + マッチ度順");
+  const hasGpsDistance = hasCoordinates(userLocation) && hasAnyFacilityCoordinates();
+  const hasAddressFallback = userLocation.areaTokens.length > 0;
+  const title = hasGpsDistance
+    ? "現在地から近い候補"
+    : hasAddressFallback
+      ? `${userLocation.address}周辺の候補`
+      : hasCoordinates(userLocation)
+        ? "現在地を取得しました"
+        : "掲載情報が多い候補";
+  const copy = hasGpsDistance
+    ? "GPSの現在地から表示。"
+    : hasAddressFallback
+      ? "保存住所に近い地域を優先表示。"
+      : "入力すると更新します。";
+  const summary = hasGpsDistance
+    ? "GPS実距離 + マッチ度順"
+    : hasAddressFallback
+      ? "住所の近さ + マッチ度順"
+      : "情報充実度 + マッチ度順";
+  updateResultHeader(title, copy, summary);
   const guidePanel = document.querySelector("#conversation-guide");
   if (guidePanel) guidePanel.innerHTML = "";
   const log = document.querySelector("#conversation-log");
-  if (log) log.textContent = "現在地から近い順で表示しています。";
+  if (log) log.textContent = `${locationShortLabel()}を基準に表示しています。`;
+  updateLocationUi();
+}
+
+function rerenderCurrentSearch() {
+  const input = document.querySelector("#chat-input");
+  updateConversation(input?.value || "");
 }
 
 async function refineConversationWithAi(text, requestId, localResult) {
@@ -748,6 +1065,16 @@ function bindEvents() {
     button.addEventListener("click", () => activateTab(button.dataset.tab));
   });
 
+  document.querySelector("[data-action='use-current-location']")?.addEventListener("click", () => {
+    requestCurrentLocation();
+  });
+
+  document.querySelector("[data-action='save-fallback-address']")?.addEventListener("click", saveFallbackAddress);
+  document.querySelector("[data-action='clear-location']")?.addEventListener("click", clearLocationPrefs);
+  document.querySelector("#fallback-address")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") saveFallbackAddress();
+  });
+
   document.querySelector("#clinic-list")?.addEventListener("click", (event) => {
     const detailLink = event.target.closest("[data-detail-id]");
     if (!detailLink) return;
@@ -766,10 +1093,16 @@ function bindEvents() {
 }
 
 async function initApp() {
+  loadLocationPrefs();
+  updateLocationUi();
   renderWordBranch();
   bindEvents();
   await loadFacilityData();
   renderNearbyResults();
+  if (userLocation.source === "none" && canUseGeolocation() && !sessionStorage.getItem(LOCATION_AUTO_SESSION_KEY)) {
+    sessionStorage.setItem(LOCATION_AUTO_SESSION_KEY, "1");
+    requestCurrentLocation({ rerender: true });
+  }
 }
 
 initApp();
