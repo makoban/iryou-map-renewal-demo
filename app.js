@@ -538,6 +538,21 @@ function areaTokenWeight(token) {
   return 8;
 }
 
+function inferAreaCenterFromAddress(address) {
+  const tokens = extractAreaTokens(address);
+  if (!tokens.length) return null;
+  const candidates = tokaiAreaCenters
+    .map((area) => {
+      const score = tokens
+        .filter((token) => area.label.includes(token))
+        .reduce((sum, token) => sum + areaTokenWeight(token), 0);
+      return { ...area, score };
+    })
+    .filter((area) => area.score >= 18)
+    .sort((a, b) => b.score - a.score || b.label.length - a.label.length);
+  return candidates[0] || null;
+}
+
 function computeProximity(clinic) {
   const gpsReady = hasCoordinates(userLocation);
   const clinicHasCoordinates = hasCoordinates(clinic);
@@ -553,6 +568,20 @@ function computeProximity(clinic) {
   }
 
   const addressText = String(clinic.address || "");
+  if (gpsReady) {
+    const areaCenter = inferAreaCenterFromAddress(addressText);
+    if (areaCenter) {
+      const meters = haversineMeters(userLocation.lat, userLocation.lng, areaCenter.lat, areaCenter.lng);
+      return {
+        source: "area-distance",
+        label: `${formatDistance(meters)}目安`,
+        distanceMeters: meters,
+        point: Math.max(0, 30 - Math.round(meters / 800)),
+        matchedArea: areaCenter.label.replace(/^(愛知県|岐阜県|三重県|静岡県)/, "")
+      };
+    }
+  }
+
   const matchedTokens = userLocation.areaTokens.filter((token) => addressText.includes(token));
   if (matchedTokens.length) {
     const point = Math.min(34, matchedTokens.reduce((sum, token) => sum + areaTokenWeight(token), 0));
@@ -603,10 +632,10 @@ function locationStatusLabel() {
   if (locationBusy) return "現在地を取得しています。";
   if (locationMessage) return locationMessage;
   if (hasCoordinates(userLocation) && userLocation.address) {
-    return "GPS取得済み。施設側の緯度経度が無い場合は、保存住所で近さを補正します。";
+    return "GPS取得済み。施設座標がある場合は実距離、無い場合は住所エリアから目安距離を表示します。";
   }
   if (hasCoordinates(userLocation)) {
-    return "GPS取得済み。施設側の緯度経度があるデータは実距離で並びます。";
+    return "GPS取得済み。施設座標がある場合は実距離、無い場合は住所エリアから目安距離を表示します。";
   }
   if (userLocation.address) {
     return "保存住所で近さを補正しています。";
@@ -698,9 +727,9 @@ async function requestCurrentLocation(options = {}) {
 	    };
 	    saveLocationPrefs();
 	    if (hasAnyFacilityCoordinates()) {
-	      locationMessage = "GPS取得済み。現在地からの実距離で近さを反映しています。";
+	      locationMessage = "GPS取得済み。施設座標がある候補は実距離で表示します。";
 	    } else if (userLocation.areaTokens.length) {
-	      locationMessage = "GPSから地域を推定し、住所一致で近さを反映しています。";
+	      locationMessage = "GPS取得済み。施設住所の地域から目安距離を表示します。";
 	    } else {
 	      locationMessage = "GPS取得済み。近さを出すには住所設定が必要です。";
 	    }
@@ -778,6 +807,8 @@ function normalizeFacility(item, index = 0) {
     station: displayValue(item.station, "最寄り未確認"),
     distance: displayValue(item.distance, "距離未設定"),
     distanceMeters: toFiniteNumber(item.distanceMeters),
+    proximitySource: displayValue(item.proximitySource, ""),
+    matchedArea: displayValue(item.matchedArea, ""),
     lat: toFiniteNumber(item.lat ?? item.latitude),
     lng: toFiniteNumber(item.lng ?? item.lon ?? item.longitude),
     hours: displayValue(item.hours),
@@ -804,6 +835,19 @@ function normalizeFacility(item, index = 0) {
     ? item.keywords
     : buildFacilityKeywords(normalized);
   return normalized;
+}
+
+function applyDisplayProximity(clinic) {
+  const proximity = computeProximity(clinic);
+  if (!["gps", "area-distance", "address", "preset"].includes(proximity.source)) return clinic;
+  return {
+    ...clinic,
+    distance: proximity.label,
+    distanceMeters: proximity.distanceMeters,
+    proximitySource: proximity.source,
+    matchedArea: proximity.matchedArea,
+    proximityPoint: Math.max(clinic.proximityPoint || 0, proximity.point || 0)
+  };
 }
 
 async function loadFacilityData() {
@@ -1055,11 +1099,17 @@ function renderDepartmentIcons(clinic, options = {}) {
   `;
 }
 
+function displayDistanceLabel(clinic) {
+  if (clinic.proximitySource === "gps") return clinic.distance;
+  if (clinic.proximitySource === "area-distance") return clinic.distance;
+  if (clinic.proximitySource === "address" || clinic.matchedArea) return clinic.distance;
+  if (Number.isFinite(clinic.distanceMeters)) return clinic.distance;
+  return hasCoordinates(userLocation) ? "位置未設定" : "地域未設定";
+}
+
 function renderResultMetrics(clinic) {
   const availability = clinic.availability || analyzeClinicHours(clinic);
-  const distance = clinic.proximitySource === "address" || clinic.matchedArea
-    ? clinic.distance
-    : clinic.distanceMeters === null ? "地域未設定" : clinic.distance;
+  const distance = displayDistanceLabel(clinic);
   const department = compactDisplay(prioritizedDepartments(clinic)[0] || clinic.departments, 14);
   return `
     <div class="result-metrics" aria-label="候補の目安">
@@ -1337,7 +1387,9 @@ async function requestServerSearch(query, options = {}) {
     return null;
   }
 
-  const items = Array.isArray(payload.items) ? payload.items.map(normalizeFacility) : [];
+  const items = Array.isArray(payload.items)
+    ? payload.items.map(normalizeFacility).map(applyDisplayProximity)
+    : [];
   if (!items.length) return null;
   return {
     type: payload.type || "normal",
@@ -1547,7 +1599,8 @@ function renderWordBranch() {
     if (!isComposing) scheduleConversationUpdate(input.value);
   });
   input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+    if (event.key === "Enter") {
+      event.preventDefault();
       clearTimeout(searchIdleTimer);
       updateConversation(input.value, { scroll: true, immediateAi: true });
     }
