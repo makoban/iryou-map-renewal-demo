@@ -964,28 +964,8 @@ h1 {
   color: var(--teal-dark);
 }
 
-.sort-bar {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0 0 16px;
-}
-
-.sort-bar button {
-  min-height: 42px;
-  border: 1px solid #cfe4df;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.88);
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 900;
-}
-
-.sort-bar button.active {
-  border-color: #72bdb4;
-  background: #eefaf7;
-  color: var(--teal-dark);
-  box-shadow: inset 0 0 0 1px rgba(0, 124, 120, 0.08);
+.detail-shell[hidden] {
+  display: none;
 }
 
 .results-grid {

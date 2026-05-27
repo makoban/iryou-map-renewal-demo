@@ -167,7 +167,6 @@ let aiRequestSeq = 0;
 let geminiEndpointDisabled = false;
 let serverSearchDisabled = false;
 let wordBranchBound = false;
-let currentSortMode = "smart";
 
 const RESULT_LIMIT = 5;
 const SEARCH_IDLE_DELAY_MS = 1800;
@@ -616,20 +615,7 @@ function locationStatusLabel() {
 }
 
 function getSortSummary() {
-  return {
-    smart: "おすすめ",
-    near: "近さ優先",
-    open: "今空き優先",
-    match: "科目優先"
-  }[currentSortMode] || "おすすめ";
-}
-
-function updateSortControls() {
-  document.querySelectorAll("[data-sort]").forEach((button) => {
-    const active = button.dataset.sort === currentSortMode;
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-pressed", active ? "true" : "false");
-  });
+  return "科目 → 今空き → 近さ";
 }
 
 function getDisplayVersion() {
@@ -776,6 +762,9 @@ function buildFacilityKeywords(clinic) {
 
 function normalizeFacility(item, index = 0) {
   const departmentList = Array.isArray(item.departmentList) ? item.departmentList.filter(Boolean) : [];
+  const matchedDepartments = Array.isArray(item.matchedDepartments)
+    ? item.matchedDepartments.filter(Boolean)
+    : [];
   const normalized = {
     id: displayValue(item.id, `facility-${index}`),
     name: displayValue(item.name, "施設名未確認"),
@@ -784,6 +773,7 @@ function normalizeFacility(item, index = 0) {
     until: displayValue(item.until, "時間未確認"),
     departments: displayValue(item.departments, "診療科目未確認"),
     departmentList,
+    matchedDepartments,
     address: displayValue(item.address),
     station: displayValue(item.station, "最寄り未確認"),
     distance: displayValue(item.distance, "距離未設定"),
@@ -803,7 +793,12 @@ function normalizeFacility(item, index = 0) {
     timeImageOnly: displayValue(item.timeImageOnly),
     quality: displayValue(item.quality),
     reviewReason: displayValue(item.reviewReason, "なし"),
-    qualityScore: Number.isFinite(item.qualityScore) ? item.qualityScore : 0
+    qualityScore: Number.isFinite(item.qualityScore) ? item.qualityScore : 0,
+    match: Number.isFinite(item.match) ? item.match : 0,
+    rank: Number.isFinite(item.rank) ? item.rank : 0,
+    availabilitySort: Number.isFinite(item.availabilitySort) ? item.availabilitySort : 0,
+    departmentScore: Number.isFinite(item.departmentScore) ? item.departmentScore : 0,
+    proximityPoint: Number.isFinite(item.proximityPoint) ? item.proximityPoint : 0
   };
   normalized.keywords = Array.isArray(item.keywords) && item.keywords.length
     ? item.keywords
@@ -871,6 +866,9 @@ function findDepartments(text) {
 function scoreClinic(clinic, query, departments, mode, guideKeywords = []) {
   const text = `${clinic.name} ${clinic.departments} ${clinic.address} ${clinic.station} ${clinic.keywords.join(" ")}`;
   const departmentMatches = departments.filter((department) => clinic.departmentList.includes(department)).length;
+  const matchedDepartments = departments.filter((department) => (
+    clinic.departmentList.includes(department) || clinic.departments.includes(department)
+  ));
   const keywordMatches = clinic.keywords.filter((keyword) => query.includes(keyword)).length;
   const guideKeywordMatches = guideKeywords.filter((keyword) => (
     text.includes(keyword) ||
@@ -903,43 +901,28 @@ function scoreClinic(clinic, query, departments, mode, guideKeywords = []) {
     availabilitySort: availability.sortBucket,
     departmentScore: departmentPoint + keywordPoint + exactPoint + childIntentPoint + specialtyPoint,
     proximityPoint: distancePoint,
+    matchedDepartments,
     match,
     rank
   };
 }
 
-function compareScoredClinics(a, b, mode = "word") {
-  if (currentSortMode === "near") {
-    if ((b.proximityPoint || 0) !== (a.proximityPoint || 0)) {
-      return (b.proximityPoint || 0) - (a.proximityPoint || 0);
-    }
-    if (Number.isFinite(a.distanceMeters) || Number.isFinite(b.distanceMeters)) {
-      return (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) - (b.distanceMeters ?? Number.MAX_SAFE_INTEGER);
-    }
-  }
-  if (currentSortMode === "open") {
-    if ((b.availabilitySort || 0) !== (a.availabilitySort || 0)) {
-      return (b.availabilitySort || 0) - (a.availabilitySort || 0);
-    }
-  }
-  if (currentSortMode === "match") {
-    if ((b.departmentScore || 0) !== (a.departmentScore || 0)) {
-      return (b.departmentScore || 0) - (a.departmentScore || 0);
-    }
-  }
-  if (mode === "location" && (b.proximityPoint || 0) !== (a.proximityPoint || 0)) {
-    return (b.proximityPoint || 0) - (a.proximityPoint || 0);
+function compareScoredClinics(a, b) {
+  if ((b.departmentScore || 0) !== (a.departmentScore || 0)) {
+    return (b.departmentScore || 0) - (a.departmentScore || 0);
   }
   if ((b.availabilitySort || 0) !== (a.availabilitySort || 0)) {
     return (b.availabilitySort || 0) - (a.availabilitySort || 0);
   }
-  if (mode === "word" && (b.departmentScore || 0) !== (a.departmentScore || 0)) {
-    return (b.departmentScore || 0) - (a.departmentScore || 0);
-  }
   if ((b.proximityPoint || 0) !== (a.proximityPoint || 0)) {
     return (b.proximityPoint || 0) - (a.proximityPoint || 0);
   }
-  return b.rank - a.rank || String(a.name).localeCompare(String(b.name), "ja");
+  if (Number.isFinite(a.distanceMeters) || Number.isFinite(b.distanceMeters)) {
+    return (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) - (b.distanceMeters ?? Number.MAX_SAFE_INTEGER);
+  }
+  return b.rank - a.rank
+    || (b.qualityScore || 0) - (a.qualityScore || 0)
+    || String(a.name).localeCompare(String(b.name), "ja");
 }
 
 function searchClinics(query = "", mode = "word", guide = null) {
@@ -973,12 +956,25 @@ function buildRankText(clinic, index) {
   return `#${index + 1}`;
 }
 
+function prioritizedDepartments(clinic) {
+  const matched = Array.isArray(clinic.matchedDepartments) ? clinic.matchedDepartments.filter(Boolean) : [];
+  const all = Array.isArray(clinic.departmentList) && clinic.departmentList.length
+    ? clinic.departmentList
+    : String(clinic.departments || "").split(/[、,・]/).map((item) => item.trim()).filter(Boolean);
+  return uniqueItems([...matched, ...all], 12);
+}
+
+function resultDepartmentText(clinic) {
+  const departments = prioritizedDepartments(clinic);
+  return departments.length ? departments.join("、") : displayValue(clinic.departments, "診療科目未確認");
+}
+
 function renderResultMetrics(clinic) {
   const availability = clinic.availability || analyzeClinicHours(clinic);
   const distance = clinic.proximitySource === "address" || clinic.matchedArea
     ? clinic.distance
     : clinic.distanceMeters === null ? "地域未設定" : clinic.distance;
-  const department = compactDisplay(clinic.departmentList?.[0] || clinic.departments, 14);
+  const department = compactDisplay(prioritizedDepartments(clinic)[0] || clinic.departments, 14);
   return `
     <div class="result-metrics" aria-label="候補の目安">
       <div class="result-metric metric-open ${escapeHtml(availability.className)}">
@@ -1025,6 +1021,7 @@ function renderClinics(items = currentResults) {
   if (!list) return;
   const results = items.length ? items : searchClinics("現在地", "location").items;
   currentResults = results;
+  hideDetail();
   list.innerHTML = results.map((clinic, index) => {
     const phoneHref = clinic.phone ? `tel:${clinic.phone.replace(/[^\d+]/g, "")}` : "";
     const rankText = buildRankText(clinic, index);
@@ -1033,8 +1030,8 @@ function renderClinics(items = currentResults) {
 	        <div class="result-rank">${rankText}</div>
 	        <div class="result-top">
 	          <div>
-	            <h3>${escapeHtml(clinic.name)}</h3>
-	            <p>${escapeHtml(clinic.departments)}</p>
+            <h3>${escapeHtml(clinic.name)}</h3>
+	            <p>${escapeHtml(resultDepartmentText(clinic))}</p>
 	          </div>
 	        </div>
 	        ${renderResultMetrics(clinic)}
@@ -1049,7 +1046,11 @@ function renderClinics(items = currentResults) {
       </article>
     `;
   }).join("");
-  renderDetail(results[0]);
+}
+
+function hideDetail() {
+  const detail = document.querySelector("#detail");
+  if (detail) detail.hidden = true;
 }
 
 function setActionLink(link, href) {
@@ -1063,6 +1064,7 @@ function setActionLink(link, href) {
 
 function renderDetail(clinic = currentResults[0]) {
   if (!clinic) return;
+  const detail = document.querySelector("#detail");
   const heading = document.querySelector("#detail-heading");
   const copy = document.querySelector("#detail-copy");
   const overview = document.querySelector("#detail-overview-grid");
@@ -1071,6 +1073,7 @@ function renderDetail(clinic = currentResults[0]) {
   const meta = document.querySelector("#detail-meta");
   const fields = document.querySelector("#detail-fields");
   if (!heading || !overview || !statusRow || !name || !meta || !fields) return;
+  if (detail) detail.hidden = false;
   const availability = clinic.availability || analyzeClinicHours(clinic);
 
   heading.textContent = clinic.name;
@@ -1121,7 +1124,6 @@ function updateResultHeader(label, copy, summary) {
     <span>並び順</span>
     <strong>${summary}</strong>
   `;
-  updateSortControls();
 }
 
 function renderDepartmentNote(result, query, guide = null, targetSelector = "#branch-panel") {
@@ -1142,7 +1144,7 @@ function renderDepartmentNote(result, query, guide = null, targetSelector = "#br
   }
 
   const departments = result.departments.length ? result.departments : ["近くの医療機関"];
-  const summary = aiGuide.summary || "細かい条件を選ばなくても、近さとマッチ度で上から並べます。";
+  const summary = aiGuide.summary || "細かい条件を選ばなくても、科目、今空き、近さの順で上から並べます。";
   const title = aiGuide.source === "gemini" ? "会話から候補を整理しました" : `「${escapedQuery || "現在地"}」に近い候補`;
   panel.innerHTML = `
     <div class="branch-note">
@@ -1166,7 +1168,7 @@ function summarizeAiGuide(query, result, guide = null) {
   }
 
   const departments = result.departments.length ? result.departments.join("、") : "近くの医療機関";
-  return `「${query}」から、${departments}を候補にしました。近さとマッチ度が高い順に並べています。`;
+  return `「${query}」から、${departments}を候補にしました。科目、今空き、近さの順に並べています。`;
 }
 
 async function requestGeminiGuide(message) {
@@ -1231,12 +1233,11 @@ async function requestServerSearch(query, options = {}) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       message: query,
-	      mode: options.mode || "word",
-	      guide: options.guide || null,
-	      location: userLocation,
-	      sort: currentSortMode,
-	      limit: options.limit || RESULT_LIMIT
-	    })
+      mode: options.mode || "word",
+      guide: options.guide || null,
+      location: userLocation,
+      limit: options.limit || RESULT_LIMIT
+    })
   });
   const payload = await response.json().catch(() => null);
 
@@ -1481,7 +1482,7 @@ function activateMode(mode) {
     panel.innerHTML = `
       <div class="branch-note">
         <strong>現在地に近い候補を表示しました</strong>
-        <p>デモでは名古屋市千種区周辺として、距離が近い候補を上から並べます。</p>
+        <p>デモでは名古屋市千種区周辺として、科目、今空き、近さの順で候補を並べます。</p>
       </div>
     `;
   }
@@ -1610,20 +1611,16 @@ function bindEvents() {
   document.querySelector("#clinic-list")?.addEventListener("click", (event) => {
     const detailLink = event.target.closest("[data-detail-id]");
     if (!detailLink) return;
+    event.preventDefault();
     const clinic = currentResults.find((item) => item.id === detailLink.dataset.detailId);
-    if (clinic) renderDetail(clinic);
+    if (clinic) {
+      renderDetail(clinic);
+      document.querySelector("#detail")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   });
 
 	  document.querySelectorAll("[data-mode]").forEach((button) => {
 	    button.addEventListener("click", () => activateMode(button.dataset.mode));
-	  });
-
-	  document.querySelectorAll("[data-sort]").forEach((button) => {
-	    button.addEventListener("click", () => {
-	      currentSortMode = button.dataset.sort || "smart";
-	      updateSortControls();
-	      rerenderCurrentSearch();
-	    });
 	  });
 
   document.addEventListener("keydown", (event) => {

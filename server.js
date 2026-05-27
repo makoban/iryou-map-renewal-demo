@@ -101,9 +101,13 @@ function bestMatchedArea(address, areaTokens = []) {
     .sort((a, b) => areaTokenWeight(b) - areaTokenWeight(a) || b.length - a.length)[0] || "";
 }
 
-function toClientFacility(row, areaTokens = []) {
+function toClientFacility(row, areaTokens = [], guideDepartments = []) {
   const matchedArea = bestMatchedArea(row.address, areaTokens);
   const distance = matchedArea ? `${matchedArea}周辺` : row.distance_label || "距離未設定";
+  const departmentList = Array.isArray(row.department_list) ? row.department_list.filter(Boolean) : [];
+  const matchedDepartments = guideDepartments.filter((department) => (
+    departmentList.includes(department) || String(row.departments_text || "").includes(department)
+  ));
   return {
     id: row.id,
     name: row.name || "施設名未確認",
@@ -111,7 +115,8 @@ function toClientFacility(row, areaTokens = []) {
     statusClass: row.status_class || "closed",
     until: row.until_text || "時間未確認",
     departments: row.departments_text || "診療科目未確認",
-    departmentList: Array.isArray(row.department_list) ? row.department_list.filter(Boolean) : [],
+    departmentList,
+    matchedDepartments,
     address: row.address || "未確認",
     station: "最寄り未確認",
     distance,
@@ -351,11 +356,10 @@ async function handleDbSearch(req, res) {
     const body = await readJsonBody(req);
     const mode = body.mode === "location" ? "location" : "word";
     const message = typeof body.message === "string" ? body.message.trim().slice(0, 600) : "";
-	    const guide = inferSearchGuide(message, body.guide || {});
-	    const areaTokens = normalizeAreaTokens(body.location || {});
-	    const queryText = mode === "location" ? "" : message;
-	    const limit = Math.min(20, Math.max(1, Number(body.limit || 3)));
-	    const sort = ["smart", "near", "open", "match"].includes(body.sort) ? body.sort : "smart";
+    const guide = inferSearchGuide(message, body.guide || {});
+    const areaTokens = normalizeAreaTokens(body.location || {});
+    const queryText = mode === "location" ? "" : message;
+    const limit = Math.min(20, Math.max(1, Number(body.limit || 3)));
 
     const result = await pool.query(`
       WITH scored AS (
@@ -449,26 +453,23 @@ async function handleDbSearch(req, res) {
           + CASE WHEN holiday_care IS NOT NULL AND holiday_care <> '不明' THEN 3 ELSE 0 END
         )::int AS rank_score
       FROM scored
-	      ORDER BY
-	        CASE WHEN $7 = 'near' OR $5 = 'location' THEN area_match_count ELSE 0 END DESC,
-	        CASE WHEN $7 = 'near' THEN distance_meters END ASC NULLS LAST,
-	        CASE WHEN $7 = 'open' THEN availability_sort ELSE 0 END DESC,
-	        CASE WHEN $7 = 'match' THEN department_match_count ELSE 0 END DESC,
-	        CASE WHEN $7 = 'match' THEN keyword_match_count ELSE 0 END DESC,
-	        availability_sort DESC,
-	        department_match_count DESC,
-	        area_match_count DESC,
-	        rank_score DESC,
-	        quality_score DESC,
-	        name ASC
-	      LIMIT $6
-	    `, [queryText, guide.departments, guide.keywords, areaTokens, mode, limit, sort]);
+      ORDER BY
+        department_match_count DESC,
+        keyword_match_count DESC,
+        availability_sort DESC,
+        area_match_count DESC,
+        distance_meters ASC NULLS LAST,
+        rank_score DESC,
+        quality_score DESC,
+        name ASC
+      LIMIT $6
+    `, [queryText, guide.departments, guide.keywords, areaTokens, mode, limit]);
 
     sendJson(res, 200, {
       ok: true,
       source: "postgres",
-	      query: { message, mode, departments: guide.departments, keywords: guide.keywords, areaTokens, sort },
-      items: result.rows.map((row) => toClientFacility(row, areaTokens)),
+      query: { message, mode, departments: guide.departments, keywords: guide.keywords, areaTokens },
+      items: result.rows.map((row) => toClientFacility(row, areaTokens, guide.departments)),
       meta: { count: result.rowCount }
     });
   } catch (error) {
