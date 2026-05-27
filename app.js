@@ -980,7 +980,8 @@ function departmentIconFor(department) {
   if (/救急/.test(text)) return { kind: "emergency", label: "救急" };
   if (/小児/.test(text)) return { kind: "pediatrics", label: "小児" };
   if (/歯|口腔|矯正|インプラント|ホワイトニング/.test(text)) return { kind: "dental", label: "歯科" };
-  if (/整形|リハビリ|リウマチ|骨|接骨|捻挫|打撲|脱臼|挫傷|交通事故/.test(text)) return { kind: "orthopedic", label: "整形" };
+  if (/リハビリ/.test(text)) return { kind: "rehab", label: "リハ" };
+  if (/整形|リウマチ|骨|接骨|捻挫|打撲|脱臼|挫傷|交通事故/.test(text)) return { kind: "orthopedic", label: "整形" };
   if (/皮膚|皮フ|美容皮膚|形成/.test(text)) return { kind: "skin", label: "皮膚" };
   if (/眼|目/.test(text)) return { kind: "eye", label: "眼科" };
   if (/耳鼻|咽喉|耳|鼻/.test(text)) return { kind: "ent", label: "耳鼻" };
