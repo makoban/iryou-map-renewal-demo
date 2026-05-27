@@ -1087,7 +1087,7 @@ h1 {
   border-radius: 12px;
   background:
     rgba(255, 255, 255, 0.72)
-    var(--dept-icon, url("./assets/generated-ui/dept-general.png"))
+    var(--dept-icon, url("./assets/generated-ui/dept-general.png?v=20260527-centered-v1"))
     center / cover no-repeat;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
 }
@@ -1118,7 +1118,7 @@ h1 {
   --dept-bg: #eefaf7;
   --dept-border: #9ed9d2;
   --dept-color: #006d69;
-  --dept-icon: url("./assets/generated-ui/dept-general.png");
+  --dept-icon: url("./assets/generated-ui/dept-general.png?v=20260527-centered-v1");
 }
 
 .dept-internal,
@@ -1130,29 +1130,29 @@ h1 {
 }
 
 .dept-internal {
-  --dept-icon: url("./assets/generated-ui/dept-internal.png");
+  --dept-icon: url("./assets/generated-ui/dept-internal.png?v=20260527-centered-v1");
 }
 
 .dept-cardio {
-  --dept-icon: url("./assets/generated-ui/dept-cardio.png");
+  --dept-icon: url("./assets/generated-ui/dept-cardio.png?v=20260527-centered-v1");
 }
 
 .dept-gastro {
-  --dept-icon: url("./assets/generated-ui/dept-gastro.png");
+  --dept-icon: url("./assets/generated-ui/dept-gastro.png?v=20260527-centered-v1");
 }
 
 .dept-pediatrics {
   --dept-bg: #fff8df;
   --dept-border: #efd785;
   --dept-color: #8a6100;
-  --dept-icon: url("./assets/generated-ui/dept-pediatrics.png");
+  --dept-icon: url("./assets/generated-ui/dept-pediatrics.png?v=20260527-centered-v1");
 }
 
 .dept-dental {
   --dept-bg: #eef7ff;
   --dept-border: #b7d8f5;
   --dept-color: #23679d;
-  --dept-icon: url("./assets/generated-ui/dept-dental.png");
+  --dept-icon: url("./assets/generated-ui/dept-dental.png?v=20260527-centered-v1");
 }
 
 .dept-orthopedic,
@@ -1160,14 +1160,14 @@ h1 {
   --dept-bg: #fff5e8;
   --dept-border: #eecb9b;
   --dept-color: #98600a;
-  --dept-icon: url("./assets/generated-ui/dept-orthopedic.png");
+  --dept-icon: url("./assets/generated-ui/dept-orthopedic.png?v=20260527-centered-v1");
 }
 
 .dept-rehab {
   --dept-bg: #f0fbf5;
   --dept-border: #bbe6cb;
   --dept-color: #157b43;
-  --dept-icon: url("./assets/generated-ui/dept-rehab.png");
+  --dept-icon: url("./assets/generated-ui/dept-rehab.png?v=20260527-centered-v1");
 }
 
 .dept-skin,
@@ -1178,11 +1178,11 @@ h1 {
 }
 
 .dept-skin {
-  --dept-icon: url("./assets/generated-ui/dept-skin.png");
+  --dept-icon: url("./assets/generated-ui/dept-skin.png?v=20260527-centered-v1");
 }
 
 .dept-obgyn {
-  --dept-icon: url("./assets/generated-ui/dept-obgyn.png");
+  --dept-icon: url("./assets/generated-ui/dept-obgyn.png?v=20260527-centered-v1");
 }
 
 .dept-eye,
@@ -1195,19 +1195,19 @@ h1 {
 }
 
 .dept-eye {
-  --dept-icon: url("./assets/generated-ui/dept-eye.png");
+  --dept-icon: url("./assets/generated-ui/dept-eye.png?v=20260527-centered-v1");
 }
 
 .dept-ent {
-  --dept-icon: url("./assets/generated-ui/dept-ent.png");
+  --dept-icon: url("./assets/generated-ui/dept-ent.png?v=20260527-centered-v1");
 }
 
 .dept-urology {
-  --dept-icon: url("./assets/generated-ui/dept-urology.png");
+  --dept-icon: url("./assets/generated-ui/dept-urology.png?v=20260527-centered-v1");
 }
 
 .dept-mental {
-  --dept-icon: url("./assets/generated-ui/dept-mental.png");
+  --dept-icon: url("./assets/generated-ui/dept-mental.png?v=20260527-centered-v1");
 }
 
 .dept-surgery,
@@ -1218,11 +1218,11 @@ h1 {
 }
 
 .dept-surgery {
-  --dept-icon: url("./assets/generated-ui/dept-surgery.png");
+  --dept-icon: url("./assets/generated-ui/dept-surgery.png?v=20260527-centered-v1");
 }
 
 .dept-emergency {
-  --dept-icon: url("./assets/generated-ui/dept-emergency.png");
+  --dept-icon: url("./assets/generated-ui/dept-emergency.png?v=20260527-centered-v1");
 }
 
 .dept-animal,
