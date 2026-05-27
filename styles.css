@@ -1046,6 +1046,135 @@ h1 {
   line-height: 1.5;
 }
 
+.department-text {
+  margin-bottom: 8px;
+}
+
+.department-icon-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+
+.department-icon-chip {
+  --dept-bg: #f0faf7;
+  --dept-border: #cfe8e2;
+  --dept-color: var(--teal-dark);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 32px;
+  padding: 4px 8px 4px 5px;
+  border: 1px solid var(--dept-border);
+  border-radius: 10px;
+  background: var(--dept-bg);
+  color: var(--dept-color);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 6px 14px rgba(12, 70, 66, 0.05);
+}
+
+.department-symbol {
+  display: grid;
+  place-items: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.department-symbol svg {
+  display: block;
+  width: 21px;
+  height: 21px;
+}
+
+.department-symbol svg * {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.department-icon-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dept-general {
+  --dept-bg: #eefaf7;
+  --dept-border: #9ed9d2;
+  --dept-color: #006d69;
+}
+
+.dept-internal,
+.dept-cardio,
+.dept-gastro {
+  --dept-bg: #f0fbf5;
+  --dept-border: #bbe6cb;
+  --dept-color: #157b43;
+}
+
+.dept-pediatrics {
+  --dept-bg: #fff8df;
+  --dept-border: #efd785;
+  --dept-color: #8a6100;
+}
+
+.dept-dental {
+  --dept-bg: #eef7ff;
+  --dept-border: #b7d8f5;
+  --dept-color: #23679d;
+}
+
+.dept-orthopedic,
+.dept-rehab,
+.dept-therapy {
+  --dept-bg: #fff5e8;
+  --dept-border: #eecb9b;
+  --dept-color: #98600a;
+}
+
+.dept-skin,
+.dept-obgyn {
+  --dept-bg: #fff1f6;
+  --dept-border: #efc4d5;
+  --dept-color: #9a4164;
+}
+
+.dept-eye,
+.dept-ent,
+.dept-urology,
+.dept-mental {
+  --dept-bg: #f2f5ff;
+  --dept-border: #c8d3f1;
+  --dept-color: #415c9a;
+}
+
+.dept-surgery,
+.dept-emergency {
+  --dept-bg: #fff0ee;
+  --dept-border: #f0bbb4;
+  --dept-color: #a33d32;
+}
+
+.dept-animal,
+.dept-other,
+.dept-more {
+  --dept-bg: #f5f8f8;
+  --dept-border: #d6e2df;
+  --dept-color: #607273;
+}
+
 .status {
   display: inline-flex;
   align-items: center;
@@ -1485,6 +1614,14 @@ h1 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin: 16px 0;
+}
+
+.detail-department-icons {
+  margin: 10px 0 14px;
+}
+
+.detail-department-icons .department-icon-chip {
+  min-height: 34px;
 }
 
 .detail-card .cta-row a.generated-action {
@@ -2120,6 +2257,30 @@ h1 {
   .result-card h3 {
     min-height: 0;
     font-size: 18px;
+  }
+
+  .department-icon-row {
+    gap: 5px;
+    margin: 7px 0 10px;
+  }
+
+  .department-icon-chip {
+    min-height: 30px;
+    padding: 3px 7px 3px 4px;
+    border-radius: 9px;
+    font-size: 11px;
+  }
+
+  .department-symbol {
+    flex-basis: 22px;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+  }
+
+  .department-symbol svg {
+    width: 19px;
+    height: 19px;
   }
 
   .map-tile {

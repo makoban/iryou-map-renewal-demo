@@ -969,6 +969,91 @@ function resultDepartmentText(clinic) {
   return departments.length ? departments.join("、") : displayValue(clinic.departments, "診療科目未確認");
 }
 
+function isGeneralHospital(clinic) {
+  const name = String(clinic.name || "");
+  const departments = prioritizedDepartments(clinic);
+  return name.includes("総合病院") || (/病院/.test(name) && departments.length >= 5);
+}
+
+function departmentIconFor(department) {
+  const text = String(department || "");
+  if (/救急/.test(text)) return { kind: "emergency", label: "救急" };
+  if (/小児/.test(text)) return { kind: "pediatrics", label: "小児" };
+  if (/歯|口腔|矯正|インプラント|ホワイトニング/.test(text)) return { kind: "dental", label: "歯科" };
+  if (/整形|リハビリ|リウマチ|骨|接骨|捻挫|打撲|脱臼|挫傷|交通事故/.test(text)) return { kind: "orthopedic", label: "整形" };
+  if (/皮膚|皮フ|美容皮膚|形成/.test(text)) return { kind: "skin", label: "皮膚" };
+  if (/眼|目/.test(text)) return { kind: "eye", label: "眼科" };
+  if (/耳鼻|咽喉|耳|鼻/.test(text)) return { kind: "ent", label: "耳鼻" };
+  if (/産|婦人/.test(text)) return { kind: "obgyn", label: "婦人" };
+  if (/心療|精神/.test(text)) return { kind: "mental", label: "心療" };
+  if (/泌尿|腎|尿/.test(text)) return { kind: "urology", label: "泌尿" };
+  if (/循環|心臓/.test(text)) return { kind: "cardio", label: "循環" };
+  if (/消化|胃腸|肝臓|内視鏡/.test(text)) return { kind: "gastro", label: "消化" };
+  if (/外科|肛門|乳腺|血管|脳神経外科/.test(text)) return { kind: "surgery", label: "外科" };
+  if (/鍼|灸|はり|マッサージ|整体/.test(text)) return { kind: "therapy", label: "施術" };
+  if (/動物|犬|猫/.test(text)) return { kind: "animal", label: "動物" };
+  if (/内科|呼吸|糖尿|内分泌|血液|漢方|神経|人工透析|老年/.test(text)) return { kind: "internal", label: "内科" };
+  return { kind: "other", label: compactDisplay(text || "科目", 4) };
+}
+
+function departmentIconItems(clinic, limit = 4) {
+  const items = [];
+  const seen = new Set();
+  const add = (item, title = item.label) => {
+    if (!item?.kind || seen.has(item.kind)) return;
+    seen.add(item.kind);
+    items.push({ ...item, title });
+  };
+
+  if (isGeneralHospital(clinic)) add({ kind: "general", label: "総合病院" }, "総合病院");
+  prioritizedDepartments(clinic).forEach((department) => add(departmentIconFor(department), department));
+  if (!items.length) add({ kind: "other", label: "科目" }, "診療科目");
+
+  const visible = items.slice(0, limit);
+  const omitted = Math.max(0, items.length - visible.length);
+  return { visible, omitted };
+}
+
+function departmentSymbol(kind) {
+  const common = 'viewBox="0 0 48 48" aria-hidden="true" focusable="false"';
+  const icons = {
+    general: `<svg ${common}><rect x="11" y="12" width="26" height="27" rx="4"/><path d="M19 39V27h10v12M18 20h12M24 14v12M16 28h3M29 28h3M16 34h3M29 34h3"/></svg>`,
+    internal: `<svg ${common}><path d="M24 37s-13-7.6-13-18.2c0-5 6.1-7.3 10.1-3.5L24 18l2.9-2.7c4-3.8 10.1-1.5 10.1 3.5C37 29.4 24 37 24 37Z"/><path d="M13 31c4-2 7-1.3 9 2 2.7-5 6.7-6.5 12-4"/></svg>`,
+    pediatrics: `<svg ${common}><circle cx="24" cy="24" r="13"/><path d="M17 21c2-4 6-5 11-5M18.5 27h.1M29.5 27h.1M19 32c3 2.2 7 2.2 10 0"/></svg>`,
+    dental: `<svg ${common}><path d="M15 16c2.8-5 7.2-3.4 9-1.8 1.8-1.6 6.2-3.2 9 1.8 2.7 4.8-.9 20.7-6.2 20.7-2.1 0-1.7-7.4-2.8-7.4s-.7 7.4-2.8 7.4C15.9 36.7 12.3 20.8 15 16Z"/><path d="M33 10l1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5Z"/></svg>`,
+    orthopedic: `<svg ${common}><path d="M16 15c-2-2-5-1.8-6.4.1-1.4 2-.6 4.5 1.7 5.5L27.4 36.7c1 2.3 3.5 3.1 5.5 1.7 1.9-1.4 2.1-4.4.1-6.4 2 2 5 1.8 6.4-.1 1.4-2 .6-4.5-1.7-5.5L21.6 10.3c-1-2.3-3.5-3.1-5.5-1.7-1.9 1.4-2.1 4.4-.1 6.4Z"/></svg>`,
+    skin: `<svg ${common}><rect x="12" y="16" width="24" height="18" rx="7"/><path d="M24 16c4 4 3.5 9-1 12"/><circle cx="18" cy="23" r="1.1"/><circle cx="30" cy="27" r="1.1"/><path d="M35 11l1.4 2.8 2.8 1.4-2.8 1.4L35 19.4l-1.4-2.8-2.8-1.4 2.8-1.4Z"/></svg>`,
+    eye: `<svg ${common}><path d="M8 24s6-10 16-10 16 10 16 10-6 10-16 10S8 24 8 24Z"/><circle cx="24" cy="24" r="5"/><path d="M17 11l2 4M31 11l-2 4"/></svg>`,
+    ent: `<svg ${common}><path d="M25 14c-5.5 0-9 3.4-9 8.2 0 6.2 7.7 6.3 7.7 11.4 0 2.7-2 4.4-4.8 4.4"/><path d="M25 20c3 0 4.8 1.8 4.8 4.3 0 3.2-3.2 4.2-5 6.6M33 17c2.5 2.2 4 5 4 8.2M12 15c-2 2-3 4.4-3 7"/></svg>`,
+    obgyn: `<svg ${common}><path d="M24 12c6 0 10 4.5 10 10 0 7-10 14-10 14S14 29 14 22c0-5.5 4-10 10-10Z"/><path d="M20 24c2.6 2.5 5.4 2.5 8 0M35 33c3-.8 5-3 5-6"/></svg>`,
+    mental: `<svg ${common}><path d="M16 29c-4.3 0-7-2.5-7-6 0-3 2.3-5.4 5.4-5.8C15.8 13.7 19.2 12 23 13c2.3-2.2 6.4-1.6 8.2 1.2 4.3.2 7.8 3.4 7.8 7.4 0 4.3-3.4 7.4-8 7.4H16Z"/><path d="M18 34c3.8 3 8.2 3 12 0"/></svg>`,
+    urology: `<svg ${common}><path d="M24 9s10 11 10 18.2C34 33.3 29.7 38 24 38s-10-4.7-10-10.8C14 20 24 9 24 9Z"/><path d="M19 28c2.7 2.3 7.3 2.3 10 0"/></svg>`,
+    surgery: `<svg ${common}><path d="M13 35l20-20c2-2 5-1 6 1l-25 25c-2-1-3-4-1-6Z"/><path d="M10 41h20M31 13l4 4"/></svg>`,
+    cardio: `<svg ${common}><path d="M24 37s-12-7.5-12-17.2c0-5 5.8-7.1 9.6-3.4L24 18.8l2.4-2.4c3.8-3.7 9.6-1.6 9.6 3.4C36 29.5 24 37 24 37Z"/><path d="M11 26h7l2.3-5 4.4 10 2.8-5H37"/></svg>`,
+    gastro: `<svg ${common}><path d="M24 9c6.5 4 8 7.8 5 12.2-2 2.9.4 5.3 3.4 6.2 3.4 1 4.1 6.6-1.3 9.2-7.6 3.6-15.9-.6-15.9-8.3 0-4.5 3.9-7 3.9-10.2 0-3.5-2.5-5.5-1.2-8.3"/><path d="M23 28c1.8 1.5 4.1 1.5 6 0"/></svg>`,
+    emergency: `<svg ${common}><rect x="11" y="12" width="26" height="24" rx="6"/><path d="M24 18v12M18 24h12"/></svg>`,
+    therapy: `<svg ${common}><path d="M33 11L14 30M26 18l4 4M13 35h22M18 27l5 5"/></svg>`,
+    animal: `<svg ${common}><circle cx="17" cy="19" r="3"/><circle cx="25" cy="16" r="3"/><circle cx="33" cy="19" r="3"/><circle cx="21" cy="27" r="3"/><path d="M27 27c5 0 9 3.5 9 7.5 0 3-2.4 4.5-5.3 3.2-3.2-1.5-5.2-1.5-8.4 0C19.4 39 17 37.5 17 34.5c0-4 4-7.5 10-7.5Z"/></svg>`,
+    other: `<svg ${common}><path d="M24 9l3.5 8 8.5 1.2-6.2 5.9 1.5 8.4L24 28.4l-7.3 4.1 1.5-8.4-6.2-5.9 8.5-1.2Z"/></svg>`
+  };
+  return icons[kind] || icons.other;
+}
+
+function renderDepartmentIcons(clinic, options = {}) {
+  const { visible, omitted } = departmentIconItems(clinic, options.limit || 4);
+  return `
+    <div class="department-icon-row ${options.detail ? "detail-department-icons" : ""}" aria-label="診療科目アイコン">
+      ${visible.map((item) => `
+        <span class="department-icon-chip dept-${escapeHtml(item.kind)}" title="${escapeHtml(item.title)}" aria-label="${escapeHtml(item.title)}">
+          <span class="department-symbol">${departmentSymbol(item.kind)}</span>
+          <span class="department-icon-label">${escapeHtml(item.label)}</span>
+        </span>
+      `).join("")}
+      ${omitted ? `<span class="department-icon-chip dept-more" aria-label="ほか${omitted}科目"><span class="department-icon-label">+${omitted}</span></span>` : ""}
+    </div>
+  `;
+}
+
 function renderResultMetrics(clinic) {
   const availability = clinic.availability || analyzeClinicHours(clinic);
   const distance = clinic.proximitySource === "address" || clinic.matchedArea
@@ -1031,7 +1116,8 @@ function renderClinics(items = currentResults) {
 	        <div class="result-top">
 	          <div>
             <h3>${escapeHtml(clinic.name)}</h3>
-	            <p>${escapeHtml(resultDepartmentText(clinic))}</p>
+	            <p class="department-text">${escapeHtml(resultDepartmentText(clinic))}</p>
+              ${renderDepartmentIcons(clinic)}
 	          </div>
 	        </div>
 	        ${renderResultMetrics(clinic)}
@@ -1071,6 +1157,7 @@ function renderDetail(clinic = currentResults[0]) {
   const statusRow = document.querySelector("#detail-status-row");
   const name = document.querySelector("#detail-name");
   const meta = document.querySelector("#detail-meta");
+  const detailIcons = document.querySelector("#detail-department-icons");
   const fields = document.querySelector("#detail-fields");
   if (!heading || !overview || !statusRow || !name || !meta || !fields) return;
   if (detail) detail.hidden = false;
@@ -1091,7 +1178,8 @@ function renderDetail(clinic = currentResults[0]) {
     <span>抽出品質 ${escapeHtml(clinic.quality)}</span>
   `;
   name.textContent = clinic.name;
-  meta.textContent = `${clinic.departments} / ${clinic.address}`;
+  meta.textContent = `${resultDepartmentText(clinic)} / ${clinic.address}`;
+  if (detailIcons) detailIcons.innerHTML = renderDepartmentIcons(clinic, { detail: true, limit: 6 });
   fields.innerHTML = `
     ${renderHoursPanel(clinic, false)}
     <p><strong>近さ</strong><span>${escapeHtml(clinic.distance)}</span></p>
