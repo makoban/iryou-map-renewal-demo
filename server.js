@@ -337,10 +337,11 @@ async function handleDbSearch(req, res) {
     const body = await readJsonBody(req);
     const mode = body.mode === "location" ? "location" : "word";
     const message = typeof body.message === "string" ? body.message.trim().slice(0, 600) : "";
-    const guide = inferSearchGuide(message, body.guide || {});
-    const areaTokens = normalizeAreaTokens(body.location || {});
-    const queryText = mode === "location" ? "" : message;
-    const limit = Math.min(20, Math.max(1, Number(body.limit || 3)));
+	    const guide = inferSearchGuide(message, body.guide || {});
+	    const areaTokens = normalizeAreaTokens(body.location || {});
+	    const queryText = mode === "location" ? "" : message;
+	    const limit = Math.min(20, Math.max(1, Number(body.limit || 3)));
+	    const sort = ["smart", "near", "open", "match"].includes(body.sort) ? body.sort : "smart";
 
     const result = await pool.query(`
       WITH scored AS (
@@ -434,14 +435,25 @@ async function handleDbSearch(req, res) {
           + CASE WHEN holiday_care IS NOT NULL AND holiday_care <> '不明' THEN 3 ELSE 0 END
         )::int AS rank_score
       FROM scored
-      ORDER BY availability_sort DESC, department_match_count DESC, area_match_count DESC, rank_score DESC, quality_score DESC, name ASC
-      LIMIT $6
-    `, [queryText, guide.departments, guide.keywords, areaTokens, mode, limit]);
+	      ORDER BY
+	        CASE WHEN $7 = 'near' OR $5 = 'location' THEN area_match_count ELSE 0 END DESC,
+	        CASE WHEN $7 = 'near' THEN distance_meters END ASC NULLS LAST,
+	        CASE WHEN $7 = 'open' THEN availability_sort ELSE 0 END DESC,
+	        CASE WHEN $7 = 'match' THEN department_match_count ELSE 0 END DESC,
+	        CASE WHEN $7 = 'match' THEN keyword_match_count ELSE 0 END DESC,
+	        availability_sort DESC,
+	        department_match_count DESC,
+	        area_match_count DESC,
+	        rank_score DESC,
+	        quality_score DESC,
+	        name ASC
+	      LIMIT $6
+	    `, [queryText, guide.departments, guide.keywords, areaTokens, mode, limit, sort]);
 
     sendJson(res, 200, {
       ok: true,
       source: "postgres",
-      query: { message, mode, departments: guide.departments, keywords: guide.keywords, areaTokens },
+	      query: { message, mode, departments: guide.departments, keywords: guide.keywords, areaTokens, sort },
       items: result.rows.map((row) => toClientFacility(row, areaTokens)),
       meta: { count: result.rowCount }
     });

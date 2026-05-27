@@ -7,7 +7,7 @@
   <meta name="description" content="症状を伝えるだけで簡単検索。今から行ける受診先へ。東海地方専門の医療機関検索デモです。">
   <title>医療MAP 症状を伝えるだけで簡単検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css?v=20260527-hours-mobile-v4">
+  <link rel="stylesheet" href="./styles.css?v=20260527-sort-near-v1">
 </head>
 <body>
   <header class="app-header">
@@ -60,7 +60,14 @@
 
       <div class="result-summary" id="result-summary">
         <span>並び順</span>
-        <strong>今 / 科目 / 近さ</strong>
+        <strong>おすすめ</strong>
+      </div>
+
+      <div class="sort-bar" aria-label="結果の並び替え">
+        <button class="active" type="button" data-sort="smart" aria-pressed="true">おすすめ</button>
+        <button type="button" data-sort="near" aria-pressed="false">近さ</button>
+        <button type="button" data-sort="open" aria-pressed="false">今空き</button>
+        <button type="button" data-sort="match" aria-pressed="false">科目</button>
       </div>
 
       <div class="results-grid" id="clinic-list"></div>
@@ -208,6 +215,6 @@
     <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
-  <script src="./app.js?v=20260527-hours-mobile-v4"></script>
+  <script src="./app.js?v=20260527-sort-near-v1"></script>
 </body>
 </html>

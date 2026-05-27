@@ -167,7 +167,9 @@ let aiRequestSeq = 0;
 let geminiEndpointDisabled = false;
 let serverSearchDisabled = false;
 let wordBranchBound = false;
+let currentSortMode = "smart";
 
+const RESULT_LIMIT = 5;
 const SEARCH_IDLE_DELAY_MS = 1800;
 const AI_IDLE_DELAY_MS = 800;
 const VOICE_SILENCE_MS = 1500;
@@ -175,6 +177,36 @@ const MIN_AI_QUERY_LENGTH = 2;
 const LOCATION_STORAGE_KEY = "iryouMapLocationPrefs";
 const LOCATION_AUTO_SESSION_KEY = "iryouMapAutoLocationTried";
 const aiGuideCache = new Map();
+const tokaiAreaCenters = [
+  { label: "愛知県名古屋市中区", lat: 35.1687, lng: 136.9103 },
+  { label: "愛知県名古屋市千種区", lat: 35.1665, lng: 136.9466 },
+  { label: "愛知県名古屋市昭和区", lat: 35.1502, lng: 136.9343 },
+  { label: "愛知県名古屋市東区", lat: 35.1793, lng: 136.9257 },
+  { label: "愛知県名古屋市北区", lat: 35.1941, lng: 136.9118 },
+  { label: "愛知県名古屋市西区", lat: 35.1892, lng: 136.8901 },
+  { label: "愛知県名古屋市中村区", lat: 35.1686, lng: 136.8731 },
+  { label: "愛知県名古屋市瑞穂区", lat: 35.1316, lng: 136.9349 },
+  { label: "愛知県名古屋市熱田区", lat: 35.1285, lng: 136.9102 },
+  { label: "愛知県名古屋市中川区", lat: 35.1415, lng: 136.8545 },
+  { label: "愛知県名古屋市港区", lat: 35.1077, lng: 136.8856 },
+  { label: "愛知県名古屋市南区", lat: 35.0951, lng: 136.9312 },
+  { label: "愛知県名古屋市守山区", lat: 35.2033, lng: 136.9766 },
+  { label: "愛知県名古屋市緑区", lat: 35.0708, lng: 136.9526 },
+  { label: "愛知県名古屋市名東区", lat: 35.1753, lng: 137.0101 },
+  { label: "愛知県名古屋市天白区", lat: 35.1227, lng: 136.9758 },
+  { label: "愛知県犬山市", lat: 35.3786, lng: 136.9444 },
+  { label: "愛知県春日井市", lat: 35.2476, lng: 136.9723 },
+  { label: "愛知県一宮市", lat: 35.3042, lng: 136.8031 },
+  { label: "愛知県豊田市", lat: 35.0824, lng: 137.1563 },
+  { label: "愛知県岡崎市", lat: 34.9549, lng: 137.1743 },
+  { label: "愛知県豊橋市", lat: 34.7692, lng: 137.3915 },
+  { label: "岐阜県岐阜市", lat: 35.4232, lng: 136.7607 },
+  { label: "岐阜県大垣市", lat: 35.3594, lng: 136.6128 },
+  { label: "三重県津市", lat: 34.7186, lng: 136.5058 },
+  { label: "三重県四日市市", lat: 34.965, lng: 136.6244 },
+  { label: "静岡県静岡市葵区", lat: 34.9756, lng: 138.3828 },
+  { label: "静岡県浜松市中央区", lat: 34.7108, lng: 137.7261 }
+];
 
 function uniqueItems(items, limit = 4) {
   return [...new Set(items)].slice(0, limit);
@@ -462,6 +494,44 @@ function haversineMeters(fromLat, fromLng, toLat, toLng) {
   return Math.round(radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
+function inferAddressFromCoordinates(lat, lng) {
+  if (!hasCoordinates({ lat, lng })) return "";
+  const nearest = tokaiAreaCenters
+    .map((area) => ({ ...area, meters: haversineMeters(lat, lng, area.lat, area.lng) }))
+    .sort((a, b) => a.meters - b.meters)[0];
+  return nearest && nearest.meters <= 70000 ? nearest.label : "";
+}
+
+function normalizeReverseGeocodeAddress(payload) {
+  const address = payload?.address || {};
+  const state = address.state || "";
+  const city = address.city || address.town || address.village || address.county || "";
+  const ward = address.city_district || address.suburb || address.ward || "";
+  const parts = [state, city, ward]
+    .map((part) => String(part || "").replace(/ Prefecture$/i, "県").trim())
+    .filter(Boolean);
+  const text = parts.join("");
+  return /愛知|岐阜|三重|静岡|名古屋|犬山|岐阜|津|静岡|浜松/.test(text) ? text : "";
+}
+
+async function reverseGeocodeLocation(lat, lng) {
+  try {
+    const url = new URL("https://nominatim.openstreetmap.org/reverse");
+    url.searchParams.set("format", "jsonv2");
+    url.searchParams.set("lat", String(lat));
+    url.searchParams.set("lon", String(lng));
+    url.searchParams.set("zoom", "12");
+    url.searchParams.set("addressdetails", "1");
+    url.searchParams.set("accept-language", "ja");
+    const response = await fetch(url.href, { cache: "no-store" });
+    if (!response.ok) return "";
+    const payload = await response.json().catch(() => null);
+    return normalizeReverseGeocodeAddress(payload);
+  } catch {
+    return "";
+  }
+}
+
 function areaTokenWeight(token) {
   if (/県$/.test(token)) return 4;
   if (/市.+区$/.test(token)) return 26;
@@ -545,6 +615,23 @@ function locationStatusLabel() {
   return "未設定です。GPSを許可するか、住所を保存してください。";
 }
 
+function getSortSummary() {
+  return {
+    smart: "おすすめ",
+    near: "近さ優先",
+    open: "今空き優先",
+    match: "科目優先"
+  }[currentSortMode] || "おすすめ";
+}
+
+function updateSortControls() {
+  document.querySelectorAll("[data-sort]").forEach((button) => {
+    const active = button.dataset.sort === currentSortMode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+}
+
 function updateLocationUi() {
   const chip = document.querySelector("#location-chip");
   const status = document.querySelector("#location-status");
@@ -589,21 +676,29 @@ async function requestCurrentLocation(options = {}) {
 
   try {
     const position = await requestPosition();
-    const lat = toFiniteNumber(position.coords.latitude);
-    const lng = toFiniteNumber(position.coords.longitude);
-    if (!hasCoordinates({ lat, lng })) throw new Error("invalid_position");
+	    const lat = toFiniteNumber(position.coords.latitude);
+	    const lng = toFiniteNumber(position.coords.longitude);
+	    if (!hasCoordinates({ lat, lng })) throw new Error("invalid_position");
+	    const previousAddress = userLocation.address;
+	    const inferredAddress = previousAddress
+	      || await reverseGeocodeLocation(lat, lng)
+	      || inferAddressFromCoordinates(lat, lng);
 
-    userLocation = {
-      source: "gps",
-      lat,
-      lng,
-      address: userLocation.address,
-      areaTokens: extractAreaTokens(userLocation.address)
-    };
-    saveLocationPrefs();
-    locationMessage = hasAnyFacilityCoordinates()
-      ? "GPS取得済み。現在地からの実距離で近さを反映しています。"
-      : "GPS取得済み。施設側の緯度経度追加後は実距離で並びます。代替住所を入れると現データでも近さ補正できます。";
+	    userLocation = {
+	      source: "gps",
+	      lat,
+	      lng,
+	      address: inferredAddress,
+	      areaTokens: extractAreaTokens(inferredAddress)
+	    };
+	    saveLocationPrefs();
+	    if (hasAnyFacilityCoordinates()) {
+	      locationMessage = "GPS取得済み。現在地からの実距離で近さを反映しています。";
+	    } else if (userLocation.areaTokens.length) {
+	      locationMessage = "GPSから地域を推定し、住所一致で近さを反映しています。";
+	    } else {
+	      locationMessage = "GPS取得済み。近さを出すには住所設定が必要です。";
+	    }
     return true;
   } catch {
     locationMessage = "GPSを取得できませんでした。代替住所を保存してください。";
@@ -795,6 +890,27 @@ function scoreClinic(clinic, query, departments, mode, guideKeywords = []) {
 }
 
 function compareScoredClinics(a, b, mode = "word") {
+  if (currentSortMode === "near") {
+    if ((b.proximityPoint || 0) !== (a.proximityPoint || 0)) {
+      return (b.proximityPoint || 0) - (a.proximityPoint || 0);
+    }
+    if (Number.isFinite(a.distanceMeters) || Number.isFinite(b.distanceMeters)) {
+      return (a.distanceMeters ?? Number.MAX_SAFE_INTEGER) - (b.distanceMeters ?? Number.MAX_SAFE_INTEGER);
+    }
+  }
+  if (currentSortMode === "open") {
+    if ((b.availabilitySort || 0) !== (a.availabilitySort || 0)) {
+      return (b.availabilitySort || 0) - (a.availabilitySort || 0);
+    }
+  }
+  if (currentSortMode === "match") {
+    if ((b.departmentScore || 0) !== (a.departmentScore || 0)) {
+      return (b.departmentScore || 0) - (a.departmentScore || 0);
+    }
+  }
+  if (mode === "location" && (b.proximityPoint || 0) !== (a.proximityPoint || 0)) {
+    return (b.proximityPoint || 0) - (a.proximityPoint || 0);
+  }
   if ((b.availabilitySort || 0) !== (a.availabilitySort || 0)) {
     return (b.availabilitySort || 0) - (a.availabilitySort || 0);
   }
@@ -817,7 +933,7 @@ function searchClinics(query = "", mode = "word", guide = null) {
       items: clinics
         .map((clinic) => scoreClinic(clinic, query, [], "location", aiGuide.keywords))
         .sort((a, b) => compareScoredClinics(a, b, "location"))
-        .slice(0, 3)
+        .slice(0, RESULT_LIMIT)
     };
   }
 
@@ -825,7 +941,7 @@ function searchClinics(query = "", mode = "word", guide = null) {
   const scored = clinics
     .map((clinic) => scoreClinic(clinic, query, departments, mode, aiGuide.keywords))
     .sort((a, b) => compareScoredClinics(a, b, mode))
-    .slice(0, 3);
+    .slice(0, RESULT_LIMIT);
 
   return {
     type: "normal",
@@ -840,7 +956,9 @@ function buildRankText(clinic, index) {
 
 function renderResultMetrics(clinic) {
   const availability = clinic.availability || analyzeClinicHours(clinic);
-  const distance = clinic.distanceMeters === null ? "距離未設定" : clinic.distance;
+  const distance = clinic.proximitySource === "address" || clinic.matchedArea
+    ? clinic.distance
+    : clinic.distanceMeters === null ? "地域未設定" : clinic.distance;
   const department = compactDisplay(clinic.departmentList?.[0] || clinic.departments, 14);
   return `
     <div class="result-metrics" aria-label="候補の目安">
@@ -980,6 +1098,7 @@ function updateResultHeader(label, copy, summary) {
     <span>並び順</span>
     <strong>${summary}</strong>
   `;
+  updateSortControls();
 }
 
 function renderDepartmentNote(result, query, guide = null, targetSelector = "#branch-panel") {
@@ -1089,11 +1208,12 @@ async function requestServerSearch(query, options = {}) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       message: query,
-      mode: options.mode || "word",
-      guide: options.guide || null,
-      location: userLocation,
-      limit: options.limit || 3
-    })
+	      mode: options.mode || "word",
+	      guide: options.guide || null,
+	      location: userLocation,
+	      sort: currentSortMode,
+	      limit: options.limit || RESULT_LIMIT
+	    })
   });
   const payload = await response.json().catch(() => null);
 
@@ -1117,10 +1237,10 @@ function renderConversationResult(text, result, options = {}) {
   const log = document.querySelector("#conversation-log");
   const guide = normalizeGuideFromApi(options.guide);
   const summaryLabel = guide.source === "gemini"
-    ? "今 / 科目 / 近さ"
+    ? getSortSummary()
     : options.pending
       ? "AI確認中"
-      : "今 / 科目 / 近さ";
+      : getSortSummary();
   const copy = guide.source === "gemini"
     ? ""
     : options.pending
@@ -1142,7 +1262,7 @@ function runFuzzySearch(query, mode = "word") {
   const copy = mode === "location"
     ? ""
     : "";
-  updateResultHeader(label, copy, "今 / 科目 / 近さ");
+  updateResultHeader(label, copy, getSortSummary());
   document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
 }
 
@@ -1165,11 +1285,7 @@ function renderNearbyResults() {
     : hasAddressFallback
       ? ""
       : "症状を入れると候補が変わります。";
-  const summary = hasGpsDistance
-    ? "今 / 近さ / マッチ度"
-    : hasAddressFallback
-      ? "今 / 住所 / マッチ度"
-      : "今 / 科目 / 近さ";
+  const summary = getSortSummary();
   updateResultHeader(title, copy, summary);
   const guidePanel = document.querySelector("#conversation-guide");
   if (guidePanel) guidePanel.innerHTML = "";
@@ -1181,10 +1297,10 @@ function renderNearbyResults() {
 
 async function refreshNearbyResultsFromServer() {
   const requestId = ++aiRequestSeq;
-  const serverResult = await requestServerSearch("現在地", { mode: "location", limit: 3 }).catch(() => null);
+  const serverResult = await requestServerSearch("現在地", { mode: "location", limit: RESULT_LIMIT }).catch(() => null);
   if (!serverResult || requestId !== aiRequestSeq) return;
   renderClinics(serverResult.items);
-  const summary = userLocation.areaTokens.length ? "今 / 住所 / マッチ度" : "今 / 科目 / 近さ";
+  const summary = getSortSummary();
   updateResultHeader(
     "近くの候補",
     "",
@@ -1475,9 +1591,17 @@ function bindEvents() {
     if (clinic) renderDetail(clinic);
   });
 
-  document.querySelectorAll("[data-mode]").forEach((button) => {
-    button.addEventListener("click", () => activateMode(button.dataset.mode));
-  });
+	  document.querySelectorAll("[data-mode]").forEach((button) => {
+	    button.addEventListener("click", () => activateMode(button.dataset.mode));
+	  });
+
+	  document.querySelectorAll("[data-sort]").forEach((button) => {
+	    button.addEventListener("click", () => {
+	      currentSortMode = button.dataset.sort || "smart";
+	      updateSortControls();
+	      rerenderCurrentSearch();
+	    });
+	  });
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closePanels();

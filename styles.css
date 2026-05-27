@@ -358,12 +358,13 @@ h1 {
 
 .message-box .voice-button {
   position: absolute;
-  top: 24px;
+  top: 50%;
   right: 28px;
-  bottom: 24px;
-  width: 78px;
+  width: 72px;
+  height: 72px;
+  transform: translateY(-50%);
   border: 0;
-  border-radius: 20px;
+  border-radius: 16px;
   background:
     #007c78
     url("./assets/generated-ui/message-mic-refined.png") center / cover no-repeat;
@@ -379,7 +380,7 @@ h1 {
   position: absolute;
   inset: -7px;
   border: 2px solid rgba(0, 124, 120, 0.22);
-  border-radius: 24px;
+  border-radius: 20px;
   opacity: 0;
   transform: scale(0.94);
   pointer-events: none;
@@ -414,7 +415,7 @@ h1 {
   margin-top: 12px;
   padding: 7px 12px;
   border: 1px solid #cfe4df;
-  border-radius: 999px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.82);
   color: var(--muted);
   box-shadow: 0 8px 18px rgba(12, 70, 66, 0.05);
@@ -949,6 +950,30 @@ h1 {
   color: var(--teal-dark);
 }
 
+.sort-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.sort-bar button {
+  min-height: 42px;
+  border: 1px solid #cfe4df;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.sort-bar button.active {
+  border-color: #72bdb4;
+  background: #eefaf7;
+  color: var(--teal-dark);
+  box-shadow: inset 0 0 0 1px rgba(0, 124, 120, 0.08);
+}
+
 .results-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -971,11 +996,11 @@ h1 {
 .result-rank {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 32px;
+  width: 36px;
+  height: 30px;
   margin-bottom: 10px;
   padding: 0;
-  border-radius: 999px;
+  border-radius: 8px;
   background: #effaf7;
   color: var(--teal-dark);
   font-size: 12px;
@@ -1014,7 +1039,7 @@ h1 {
   width: max-content;
   min-height: 28px;
   padding: 4px 9px;
-  border-radius: 999px;
+  border-radius: 8px;
   background: #f1f5f9;
   color: #475569;
   font-size: 12px;
@@ -1033,7 +1058,7 @@ h1 {
   min-height: 28px;
   margin-left: 4px;
   padding: 4px 9px;
-  border-radius: 999px;
+  border-radius: 8px;
   background: #effaf7;
   color: var(--teal-dark);
   font-size: 12px;
@@ -1064,7 +1089,7 @@ h1 {
   flex: 0 0 74px;
   height: 74px;
   border: 0;
-  border-radius: 18px;
+  border-radius: 12px;
   background: url("./assets/generated-ui/status-icon-sheet-v3.png") 33.333% center / 400% 100% no-repeat;
   position: relative;
 }
@@ -1141,7 +1166,7 @@ h1 {
   display: block;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 8px;
   background: url("./assets/generated-ui/status-icon-sheet-v3.png") 0 center / 400% 100% no-repeat;
 }
 
@@ -1361,10 +1386,11 @@ h1 {
 
 .result-actions a.generated-action.action-phone,
 .result-actions a.generated-action.action-detail {
-  width: 52px;
-  min-width: 52px;
+  width: 48px;
+  min-width: 48px;
+  min-height: 48px;
   padding: 0 !important;
-  border-radius: 999px;
+  border-radius: 12px;
 }
 
 .result-actions a.generated-action span {
@@ -1973,11 +1999,12 @@ h1 {
   }
 
   .message-box .voice-button {
-    top: 26px;
+    top: 50%;
     right: 20px;
-    bottom: 26px;
-    width: 68px;
-    border-radius: 16px;
+    bottom: auto;
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
   }
 
   .result-card {
@@ -1996,7 +2023,7 @@ h1 {
   .map-tile {
     flex-basis: 58px;
     height: 58px;
-    border-radius: 14px;
+    border-radius: 10px;
   }
 
   .result-metrics {
