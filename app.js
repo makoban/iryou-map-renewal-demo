@@ -963,16 +963,13 @@ function renderResultMetrics(clinic) {
   return `
     <div class="result-metrics" aria-label="候補の目安">
       <div class="result-metric metric-open ${escapeHtml(availability.className)}">
-        <span class="metric-icon icon-open" aria-hidden="true"></span>
-        <span><strong>${escapeHtml(shortAvailabilityLabel(availability))}</strong><small>${escapeHtml(availability.note)}</small></span>
+        <span>今</span><strong>${escapeHtml(shortAvailabilityLabel(availability))}</strong>
       </div>
       <div class="result-metric metric-near">
-        <span class="metric-icon icon-near" aria-hidden="true"></span>
-        <span><strong>${escapeHtml(distance)}</strong><small>ここから</small></span>
+        <span>近さ</span><strong>${escapeHtml(distance)}</strong>
       </div>
       <div class="result-metric metric-match">
-        <span class="metric-icon icon-match" aria-hidden="true"></span>
-        <span><strong>${escapeHtml(String(clinic.match))}%</strong><small>${escapeHtml(department)}</small></span>
+        <span>合致</span><strong>${escapeHtml(String(clinic.match))}% / ${escapeHtml(department)}</strong>
       </div>
     </div>
   `;
@@ -981,6 +978,14 @@ function renderResultMetrics(clinic) {
 function renderHoursPanel(clinic, compact = false) {
   const availability = clinic.availability || analyzeClinicHours(clinic);
   const today = compact ? compactDisplay(availability.today, 58) : availability.today;
+  if (compact) {
+    return `
+      <div class="hours-strip ${escapeHtml(availability.className)}">
+        <span>今日</span><strong>${escapeHtml(today)}</strong>
+        <span>休み</span><strong>${escapeHtml(compactDisplay(availability.holiday, 44))}</strong>
+      </div>
+    `;
+  }
   return `
     <div class="hours-panel ${escapeHtml(availability.className)}">
       <div class="hours-head">
@@ -1005,16 +1010,15 @@ function renderClinics(items = currentResults) {
     const phoneHref = clinic.phone ? `tel:${clinic.phone.replace(/[^\d+]/g, "")}` : "";
     const rankText = buildRankText(clinic, index);
     return `
-      <article class="result-card">
-        <div class="result-rank">${rankText}</div>
-        <div class="result-top">
-          <div>
-            <h3>${escapeHtml(clinic.name)}</h3>
-            <p>${escapeHtml(clinic.departments)}</p>
-          </div>
-          <div class="map-tile" aria-hidden="true"></div>
-        </div>
-        ${renderResultMetrics(clinic)}
+	      <article class="result-card">
+	        <div class="result-rank">${rankText}</div>
+	        <div class="result-top">
+	          <div>
+	            <h3>${escapeHtml(clinic.name)}</h3>
+	            <p>${escapeHtml(clinic.departments)}</p>
+	          </div>
+	        </div>
+	        ${renderResultMetrics(clinic)}
         <ul class="result-facts">
           <li><strong>住所</strong><span>${escapeHtml(clinic.address)}</span></li>
         </ul>
