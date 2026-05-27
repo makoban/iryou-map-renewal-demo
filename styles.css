@@ -164,7 +164,25 @@ main {
 }
 
 .hero-copy {
+  position: relative;
+  isolation: isolate;
   min-width: 0;
+}
+
+.hero-copy::before {
+  content: "";
+  position: absolute;
+  inset: -28px -18px -18px -24px;
+  z-index: -1;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 20% 16%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.12) 48%, transparent 68%),
+    radial-gradient(circle at 66% 58%, rgba(226, 246, 242, 0.76), transparent 62%),
+    linear-gradient(135deg, rgba(255, 251, 242, 0.74), rgba(235, 250, 247, 0.54));
+  filter: blur(0.2px);
+  opacity: 0.92;
+  pointer-events: none;
+  animation: heroAmbient 8s ease-in-out infinite;
 }
 
 .eyebrow {
@@ -184,7 +202,9 @@ main {
   width: clamp(190px, 28vw, 330px);
   height: auto;
   border-radius: 13px;
-  filter: drop-shadow(0 12px 18px rgba(0, 82, 78, 0.12));
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 12px 18px rgba(0, 82, 78, 0.11)) saturate(1.04);
+  animation: heroBadgeFloat 6.5s ease-in-out infinite;
 }
 
 .hero-lettering {
@@ -193,8 +213,52 @@ main {
   max-width: 760px;
   margin: 0;
   border-radius: 18px;
-  mix-blend-mode: normal;
-  filter: drop-shadow(0 18px 30px rgba(0, 85, 80, 0.06));
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 18px 30px rgba(0, 85, 80, 0.08)) saturate(1.03);
+  animation: heroLetteringEase 7.5s ease-in-out infinite;
+}
+
+@keyframes heroAmbient {
+  0%,
+  100% {
+    opacity: 0.86;
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    opacity: 0.98;
+    transform: translate3d(0, -3px, 0);
+  }
+}
+
+@keyframes heroBadgeFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -3px, 0);
+  }
+}
+
+@keyframes heroLetteringEase {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-copy::before,
+  .hero-tokai-badge,
+  .hero-lettering {
+    animation: none;
+  }
 }
 
 h1,
