@@ -101,8 +101,14 @@ function bestMatchedArea(address, areaTokens = []) {
     .sort((a, b) => areaTokenWeight(b) - areaTokenWeight(a) || b.length - a.length)[0] || "";
 }
 
+function numberOrNull(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
 function toClientFacility(row, areaTokens = [], guideDepartments = []) {
   const matchedArea = bestMatchedArea(row.address, areaTokens);
+  const distanceMeters = numberOrNull(row.computed_distance_meters ?? row.distance_meters);
   const distance = matchedArea ? `${matchedArea}周辺` : row.distance_label || "距離未設定";
   const departmentList = Array.isArray(row.department_list) ? row.department_list.filter(Boolean) : [];
   const matchedDepartments = guideDepartments.filter((department) => (
@@ -120,7 +126,7 @@ function toClientFacility(row, areaTokens = [], guideDepartments = []) {
     address: row.address || "未確認",
     station: "最寄り未確認",
     distance,
-    distanceMeters: Number.isFinite(row.distance_meters) ? row.distance_meters : null,
+    distanceMeters,
     hours: row.hours_text || "未確認",
     holiday: row.holiday_text || "未確認",
     verified: row.verified_text || "確認日未確認",
@@ -358,6 +364,8 @@ async function handleDbSearch(req, res) {
     const message = typeof body.message === "string" ? body.message.trim().slice(0, 600) : "";
     const guide = inferSearchGuide(message, body.guide || {});
     const areaTokens = normalizeAreaTokens(body.location || {});
+    const locationLat = numberOrNull(body.location?.lat);
+    const locationLng = numberOrNull(body.location?.lng);
     const queryText = mode === "location" ? "" : message;
     const limit = Math.min(20, Math.max(1, Number(body.limit || 3)));
 
@@ -389,6 +397,20 @@ async function handleDbSearch(req, res) {
           fl.holiday_care,
           fg.lat,
           fg.lng,
+          CASE
+            WHEN $7::double precision IS NOT NULL
+             AND $8::double precision IS NOT NULL
+             AND fg.lat IS NOT NULL
+             AND fg.lng IS NOT NULL
+            THEN round(
+              6371000 * 2 * asin(sqrt(
+                power(sin(radians((fg.lat - $7::double precision) / 2)), 2)
+                + cos(radians($7::double precision)) * cos(radians(fg.lat))
+                * power(sin(radians((fg.lng - $8::double precision) / 2)), 2)
+              ))
+            )::int
+            ELSE f.distance_meters
+          END AS computed_distance_meters,
           COALESCE(depts.department_list, '{}') AS department_list,
           dept_matches.count AS department_match_count,
           keyword_matches.count AS keyword_match_count,
@@ -455,15 +477,15 @@ async function handleDbSearch(req, res) {
       FROM scored
       ORDER BY
         department_match_count DESC,
-        keyword_match_count DESC,
         availability_sort DESC,
+        computed_distance_meters ASC NULLS LAST,
+        keyword_match_count DESC,
         area_match_count DESC,
-        distance_meters ASC NULLS LAST,
         rank_score DESC,
         quality_score DESC,
         name ASC
       LIMIT $6
-    `, [queryText, guide.departments, guide.keywords, areaTokens, mode, limit]);
+    `, [queryText, guide.departments, guide.keywords, areaTokens, mode, limit, locationLat, locationLng]);
 
     sendJson(res, 200, {
       ok: true,

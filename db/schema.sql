@@ -75,6 +75,13 @@ CREATE TABLE IF NOT EXISTS iryou_map.facility_geo (
   geocoded_at timestamptz
 );
 
+ALTER TABLE iryou_map.facility_geo
+  ADD COLUMN IF NOT EXISTS normalized_address text,
+  ADD COLUMN IF NOT EXISTS geocode_source text,
+  ADD COLUMN IF NOT EXISTS geocode_level integer,
+  ADD COLUMN IF NOT EXISTS geocode_status text,
+  ADD COLUMN IF NOT EXISTS geocode_note text;
+
 CREATE INDEX IF NOT EXISTS facilities_name_trgm_idx
   ON iryou_map.facilities USING gin (name gin_trgm_ops);
 
@@ -92,3 +99,6 @@ CREATE INDEX IF NOT EXISTS facility_departments_department_idx
 
 CREATE INDEX IF NOT EXISTS facility_geo_area_tokens_idx
   ON iryou_map.facility_geo USING gin (area_tokens);
+
+CREATE INDEX IF NOT EXISTS facility_geo_lat_lng_idx
+  ON iryou_map.facility_geo (lat, lng);
