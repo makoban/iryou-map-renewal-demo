@@ -165,6 +165,7 @@ let aiIdleTimer = 0;
 let searchIdleTimer = 0;
 let aiRequestSeq = 0;
 let geminiEndpointDisabled = false;
+let serverSearchDisabled = false;
 let wordBranchBound = false;
 
 const SEARCH_IDLE_DELAY_MS = 1400;
@@ -525,6 +526,11 @@ function normalizeFacility(item, index = 0) {
 }
 
 async function loadFacilityData() {
+  if (await isServerDatabaseConfigured()) {
+    clinics = fallbackClinics.map(normalizeFacility);
+    return;
+  }
+
   try {
     const response = await fetch("./data/facilities.json?v=20260526-excel-data", { cache: "force-cache" });
     if (!response.ok) throw new Error("facility_data_failed");
@@ -831,6 +837,60 @@ function canRequestAiGuide(message) {
   return true;
 }
 
+function canRequestServerSearch() {
+  if (serverSearchDisabled) return false;
+  if (!["http:", "https:"].includes(window.location.protocol)) return false;
+  if (window.location.hostname.endsWith("github.io")) return false;
+  return true;
+}
+
+async function isServerDatabaseConfigured() {
+  if (!canRequestServerSearch()) return false;
+  try {
+    const apiUrl = new URL("api/health", window.location.href);
+    const response = await fetch(apiUrl.href, { cache: "no-store" });
+    const payload = await response.json().catch(() => null);
+    if (payload?.databaseConfigured) return true;
+  } catch {
+    // Fall back to the bundled JSON when the server health check is unavailable.
+  }
+  serverSearchDisabled = true;
+  return false;
+}
+
+async function requestServerSearch(query, options = {}) {
+  if (!canRequestServerSearch()) return null;
+
+  const apiUrl = new URL("api/search", window.location.href);
+  const response = await fetch(apiUrl.href, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: query,
+      mode: options.mode || "word",
+      guide: options.guide || null,
+      location: userLocation,
+      limit: options.limit || 3
+    })
+  });
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok || !payload?.ok) {
+    if ([404, 405, 501, 503].includes(response.status) || payload?.code === "database_url_missing") {
+      serverSearchDisabled = true;
+    }
+    return null;
+  }
+
+  const items = Array.isArray(payload.items) ? payload.items.map(normalizeFacility) : [];
+  if (!items.length) return null;
+  return {
+    type: payload.type || "normal",
+    departments: payload.query?.departments || [],
+    items
+  };
+}
+
 function renderConversationResult(text, result, options = {}) {
   const log = document.querySelector("#conversation-log");
   const guide = normalizeGuideFromApi(options.guide);
@@ -894,6 +954,20 @@ function renderNearbyResults() {
   const log = document.querySelector("#conversation-log");
   if (log) log.textContent = `${locationShortLabel()}を基準に表示しています。`;
   updateLocationUi();
+  refreshNearbyResultsFromServer();
+}
+
+async function refreshNearbyResultsFromServer() {
+  const requestId = ++aiRequestSeq;
+  const serverResult = await requestServerSearch("現在地", { mode: "location", limit: 3 }).catch(() => null);
+  if (!serverResult || requestId !== aiRequestSeq) return;
+  renderClinics(serverResult.items);
+  const summary = userLocation.areaTokens.length ? "DB検索 + 住所の近さ順" : "DB検索 + 情報充実度順";
+  updateResultHeader(
+    userLocation.areaTokens.length ? `${userLocation.address}周辺の候補` : "近くの候補",
+    "DBから上位だけ取得しています。",
+    summary
+  );
 }
 
 function rerenderCurrentSearch() {
@@ -908,7 +982,8 @@ async function refineConversationWithAi(text, requestId, localResult) {
   if (aiGuideCache.has(cacheKey)) {
     if (requestId !== aiRequestSeq) return;
     const guide = aiGuideCache.get(cacheKey);
-    const result = searchClinics(text, "word", guide);
+    const result = await requestServerSearch(text, { mode: "word", guide }).catch(() => null)
+      || searchClinics(text, "word", guide);
     renderConversationResult(text, result, { guide });
     return;
   }
@@ -922,11 +997,12 @@ async function refineConversationWithAi(text, requestId, localResult) {
   }
 
   aiGuideCache.set(cacheKey, guide);
-  const result = searchClinics(text, "word", guide);
+  const result = await requestServerSearch(text, { mode: "word", guide }).catch(() => null)
+    || searchClinics(text, "word", guide);
   renderConversationResult(text, result, { guide });
 }
 
-function updateConversation(query, options = {}) {
+async function updateConversation(query, options = {}) {
   const text = query.trim();
   const requestId = ++aiRequestSeq;
   clearTimeout(aiIdleTimer);
@@ -937,16 +1013,20 @@ function updateConversation(query, options = {}) {
     return;
   }
 
-  const localResult = searchClinics(text, "word");
   const cacheKey = normalizeAiCacheKey(text);
   if (aiGuideCache.has(cacheKey)) {
     const guide = aiGuideCache.get(cacheKey);
-    const result = searchClinics(text, "word", guide);
+    const result = await requestServerSearch(text, { mode: "word", guide }).catch(() => null)
+      || searchClinics(text, "word", guide);
+    if (requestId !== aiRequestSeq) return;
     renderConversationResult(text, result, { guide });
     return;
   }
 
   const shouldUseAi = canRequestAiGuide(text);
+  const serverResult = await requestServerSearch(text, { mode: "word" }).catch(() => null);
+  if (requestId !== aiRequestSeq) return;
+  const localResult = serverResult || searchClinics(text, "word");
   renderConversationResult(text, localResult, { pending: shouldUseAi });
 
   if (shouldUseAi) {

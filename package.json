@@ -8,6 +8,11 @@
   },
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check app.js"
+    "check": "node --check server.js && node --check app.js && node --check scripts/import-facilities-to-db.mjs && node --check scripts/check-db-search.mjs",
+    "db:import": "node scripts/import-facilities-to-db.mjs",
+    "db:check": "node scripts/check-db-search.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.21.0"
   }
 }
