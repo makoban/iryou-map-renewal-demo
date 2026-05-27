@@ -122,6 +122,9 @@ function toClientFacility(row, areaTokens = []) {
     matchedArea,
     match: Number(row.match_score || 0),
     rank: Number(row.rank_score || 0),
+    availabilitySort: Number(row.availability_sort || 0),
+    departmentScore: Number(row.department_match_count || 0) * 22 + Number(row.keyword_match_count || 0) * 10,
+    proximityPoint: Number(row.area_match_count || 0) * 18,
     keywords: []
   };
 }
@@ -371,6 +374,12 @@ async function handleDbSearch(req, res) {
           dept_matches.count AS department_match_count,
           keyword_matches.count AS keyword_match_count,
           area_matches.count AS area_match_count,
+          CASE
+            WHEN f.status_class = 'open' THEN 3
+            WHEN f.status_class = 'soon' THEN 2
+            WHEN f.hours_text IS NOT NULL AND f.hours_text <> '' AND f.hours_text <> '未確認' THEN 1
+            ELSE 0
+          END AS availability_sort,
           CASE WHEN $1 <> '' AND f.search_blob ILIKE '%' || $1 || '%' THEN 1 ELSE 0 END AS exact_match
         FROM iryou_map.facilities f
         LEFT JOIN iryou_map.facility_hours fh ON fh.facility_id = f.id
@@ -425,7 +434,7 @@ async function handleDbSearch(req, res) {
           + CASE WHEN holiday_care IS NOT NULL AND holiday_care <> '不明' THEN 3 ELSE 0 END
         )::int AS rank_score
       FROM scored
-      ORDER BY rank_score DESC, quality_score DESC, name ASC
+      ORDER BY availability_sort DESC, department_match_count DESC, area_match_count DESC, rank_score DESC, quality_score DESC, name ASC
       LIMIT $6
     `, [queryText, guide.departments, guide.keywords, areaTokens, mode, limit]);
 

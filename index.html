@@ -7,7 +7,7 @@
   <meta name="description" content="症状を伝えるだけで簡単検索。今から行ける受診先へ。東海地方専門の医療機関検索デモです。">
   <title>医療MAP 症状を伝えるだけで簡単検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css?v=20260527-location-settings">
+  <link rel="stylesheet" href="./styles.css?v=20260527-hours-mobile-v4">
 </head>
 <body>
   <header class="app-header">
@@ -26,14 +26,13 @@
   <main>
     <section class="hero" id="home">
       <div class="hero-copy">
-        <p class="eyebrow">東海で、今日行ける受診先をすぐ見つける</p>
-        <img class="hero-lettering" src="./assets/generated-ui/hero-lettering-refined.png" alt="症状を伝えるだけで簡単検索。今から行ける受診先へ。">
+        <p class="eyebrow">東海地方専門</p>
+        <img class="hero-lettering" src="./assets/generated-ui/hero-search-simple-v3.png" alt="症状を伝えるだけで簡単検索。今から行ける受診先へ。">
         <h1 class="visually-hidden">症状を伝えるだけで簡単検索。今から行ける受診先へ。</h1>
-        <p class="lead">東海地方専門</p>
       </div>
 
       <section class="search-surface" aria-label="病院検索">
-        <p class="search-intent">症状や希望をそのまま入力</p>
+        <p class="search-intent visually-hidden">症状や希望をそのまま入力</p>
         <div class="message-box" id="branch-panel">
           <div class="conversation-branch">
             <label class="visually-hidden" for="chat-input">症状や希望を入力</label>
@@ -56,12 +55,12 @@
       <div class="section-heading">
         <p class="eyebrow">近くの候補</p>
         <h2 id="results-title">近さとマッチ度順で表示</h2>
-        <p id="results-copy">入力に合わせて更新します。</p>
+        <p id="results-copy">症状を入れると候補が変わります。</p>
       </div>
 
       <div class="result-summary" id="result-summary">
         <span>並び順</span>
-        <strong>近い順 + マッチ度順</strong>
+        <strong>今 / 科目 / 近さ</strong>
       </div>
 
       <div class="results-grid" id="clinic-list"></div>
@@ -133,7 +132,7 @@
           <article><strong>即時性</strong><span>入力中はキーワードで候補をすぐ変える</span></article>
           <article><strong>AI補正</strong><span>入力停止後にGemini APIで曖昧な症状・希望条件を構造化する</span></article>
         </div>
-        <p class="warning">現在のGitHub Pages版はAPIキーを置けないため、キーワード・ルールで即時更新するデモです。Render版は入力停止から約0.75秒後に /api/gemini-guide へ送り、同じ文章はキャッシュしてAPI呼び出しを減らします。</p>
+        <p class="warning">現在のGitHub Pages版はAPIキーを置けないため、キーワード・ルールで更新するデモです。Render版は入力が止まってから約2秒待ち、必要な時だけ /api/gemini-guide へ送り、同じ文章はキャッシュしてAPI呼び出しを減らします。</p>
         <img src="./assets/current-home-mobile.png" alt="現行スマホ表示" class="mini-shot">
       </section>
 
@@ -158,6 +157,7 @@
           <a href="./reports/url_check_report.html" target="_blank">HTMLレポートを見る</a>
           <a href="./reports/url_check_results.csv" download>全結果CSV</a>
           <a href="./reports/urls_from_sitemaps.csv" download>URL一覧CSV</a>
+          <a href="./reports/hours_display_analysis.md" target="_blank">営業時間分析</a>
         </div>
       </section>
 
@@ -208,6 +208,6 @@
     <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
-  <script src="./app.js?v=20260527-db-search"></script>
+  <script src="./app.js?v=20260527-hours-mobile-v4"></script>
 </body>
 </html>

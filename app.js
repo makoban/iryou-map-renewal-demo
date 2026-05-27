@@ -168,8 +168,9 @@ let geminiEndpointDisabled = false;
 let serverSearchDisabled = false;
 let wordBranchBound = false;
 
-const SEARCH_IDLE_DELAY_MS = 1400;
+const SEARCH_IDLE_DELAY_MS = 1800;
 const AI_IDLE_DELAY_MS = 800;
+const VOICE_SILENCE_MS = 1500;
 const MIN_AI_QUERY_LENGTH = 2;
 const LOCATION_STORAGE_KEY = "iryouMapLocationPrefs";
 const LOCATION_AUTO_SESSION_KEY = "iryouMapAutoLocationTried";
@@ -195,6 +196,11 @@ function escapeMultiline(value) {
 function displayValue(value, fallback = "未確認") {
   const text = String(value ?? "").trim();
   return text || fallback;
+}
+
+function compactDisplay(value, maxLength = 80, fallback = "未確認") {
+  const text = displayValue(value, fallback).replace(/\s+/g, " ").trim();
+  return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
 }
 
 function toFiniteNumber(value) {
@@ -277,6 +283,172 @@ function formatDistance(meters) {
   if (meters < 1000) return `約${Math.max(10, Math.round(meters / 10) * 10)}m`;
   const digits = meters < 10000 ? 1 : 0;
   return `約${(meters / 1000).toFixed(digits)}km`;
+}
+
+function normalizeTimeText(value) {
+  return String(value || "")
+    .replace(/[０-９]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
+    .replaceAll("：", ":")
+    .replace(/[〜～―–—−]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseClock(value, fallbackMeridiem = "") {
+  const source = normalizeTimeText(value);
+  const meridiem = /午後|PM/i.test(source) ? "pm" : /午前|AM/i.test(source) ? "am" : fallbackMeridiem;
+  const match = source.match(/(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+  let hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+  if (meridiem === "pm" && hour < 12) hour += 12;
+  if (meridiem === "am" && hour === 12) hour = 0;
+  if (hour > 24 || minute > 59) return null;
+  return hour * 60 + minute;
+}
+
+function formatMinutes(minutes) {
+  const safeMinutes = Math.max(0, Math.min(24 * 60, minutes));
+  const hour = Math.floor(safeMinutes / 60);
+  const minute = safeMinutes % 60;
+  return `${hour}:${String(minute).padStart(2, "0")}`;
+}
+
+function extractTimeRanges(value) {
+  const text = normalizeTimeText(value);
+  if (!text || text === "未確認") return [];
+  const ranges = [];
+  const pattern = /((?:午前|午後|AM|PM)?\s*\d{1,2}:\d{2})\s*(?:-|から)\s*((?:午前|午後|AM|PM)?\s*\d{1,2}:\d{2})/gi;
+  let match;
+
+  while ((match = pattern.exec(text)) && ranges.length < 6) {
+    const startSource = match[1];
+    const endSource = match[2];
+    const fallback = /午後|PM/i.test(startSource) ? "pm" : /午前|AM/i.test(startSource) ? "am" : "";
+    const start = parseClock(startSource);
+    const end = parseClock(endSource, fallback);
+    if (start !== null && end !== null && end > start && end - start <= 12 * 60) {
+      const key = `${start}-${end}`;
+      if (!ranges.some((range) => range.key === key)) {
+        ranges.push({ start, end, key, label: `${formatMinutes(start)}-${formatMinutes(end)}` });
+      }
+    }
+  }
+
+  return ranges;
+}
+
+function getJapaneseDay(date = new Date()) {
+  return ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
+}
+
+function getClosedHint(holiday, date = new Date()) {
+  const text = String(holiday || "");
+  const day = getJapaneseDay(date);
+  if (!text || text === "未確認") return { closed: false, partial: false };
+  const closedAllDay = new RegExp(`${day}(曜日|曜)(?!午後|午前)`).test(text)
+    || (day === "日" && /日曜|日曜日/.test(text))
+    || (day === "土" && /土曜休|土曜日休/.test(text));
+  const partial = new RegExp(`${day}(曜日|曜)?(午前|午後)`).test(text);
+  return { closed: closedAllDay, partial };
+}
+
+function getHoursLine(hours) {
+  const ranges = extractTimeRanges(hours);
+  if (ranges.length) return ranges.slice(0, 3).map((range) => range.label).join(" / ");
+  return compactDisplay(hours, 72);
+}
+
+function analyzeClinicHours(clinic, date = new Date()) {
+  const hours = displayValue(clinic.hours);
+  const holiday = displayValue(clinic.holiday);
+  const nowMinutes = date.getHours() * 60 + date.getMinutes();
+  const ranges = extractTimeRanges(hours);
+  const closedHint = getClosedHint(holiday, date);
+  const imageOnly = /画像のみ|要OCR|はい/.test(`${hours} ${clinic.timeImageOnly || ""}`);
+  const unknown = !hours || hours === "未確認";
+  const knownHours = !unknown && hours !== "時間未確認";
+  const inRange = !closedHint.closed && ranges.some((range) => nowMinutes >= range.start && nowMinutes < range.end);
+  const nextRange = ranges.find((range) => nowMinutes < range.start);
+  const finished = ranges.length > 0 && !inRange && !nextRange;
+
+  if (closedHint.closed) {
+    return {
+      className: "closed",
+      label: "本日休診の可能性",
+      today: "休診日記載に該当",
+      holiday: compactDisplay(holiday, 72),
+      note: "要確認",
+      priority: 0,
+      sortBucket: 0
+    };
+  }
+  if (inRange) {
+    return {
+      className: "open",
+      label: "今開いている可能性",
+      today: getHoursLine(hours),
+      holiday: compactDisplay(holiday, 72),
+      note: imageOnly ? "画像由来" : "目安",
+      priority: 80,
+      sortBucket: 3
+    };
+  }
+  if (nextRange) {
+    return {
+      className: "soon",
+      label: `${formatMinutes(nextRange.start)}からの可能性`,
+      today: getHoursLine(hours),
+      holiday: compactDisplay(holiday, 72),
+      note: closedHint.partial || imageOnly ? "要確認" : "目安",
+      priority: 58,
+      sortBucket: 2
+    };
+  }
+  if (finished) {
+    return {
+      className: "closed",
+      label: "本日の受付終了かも",
+      today: getHoursLine(hours),
+      holiday: compactDisplay(holiday, 72),
+      note: imageOnly ? "画像由来" : "目安",
+      priority: 18,
+      sortBucket: 0
+    };
+  }
+  if (knownHours || clinic.statusClass === "open") {
+    return {
+      className: "known",
+      label: "診療時間あり",
+      today: getHoursLine(hours),
+      holiday: compactDisplay(holiday, 72),
+      note: imageOnly ? "画像由来・要確認" : "要確認",
+      priority: 36,
+      sortBucket: 1
+    };
+  }
+
+  return {
+    className: "unknown",
+    label: "時間要確認",
+    today: "未確認",
+    holiday: compactDisplay(holiday, 72),
+    note: "要確認",
+    priority: 4,
+    sortBucket: 0
+  };
+}
+
+function shortAvailabilityLabel(availability) {
+  const label = String(availability?.label || "");
+  const nextStart = label.match(/(\d{1,2}:\d{2})から/)?.[1];
+  if (availability?.className === "open") return "今行けるかも";
+  if (nextStart) return `${nextStart}から`;
+  if (label.includes("休診")) return "今日は休みかも";
+  if (label.includes("終了")) return "受付終了かも";
+  if (availability?.className === "known") return "時間あり";
+  return "要確認";
 }
 
 function haversineMeters(fromLat, fromLng, toLat, toLng) {
@@ -594,6 +766,7 @@ function scoreClinic(clinic, query, departments, mode, guideKeywords = []) {
   const childIntentPoint = /子ども|子供|こども|幼児|赤ちゃん/.test(query) && clinic.keywords.includes("子ども") ? 18 : 0;
   const specialtyPoint = childIntentPoint && clinic.departmentList[0]?.includes("小児") ? 24 : 0;
   const proximity = computeProximity(clinic);
+  const availability = analyzeClinicHours(clinic);
   const distancePoint = proximity.point;
   const exactPoint = query && text.includes(query) ? 18 : 0;
   const departmentPoint = Math.min(38, departmentMatches * 22);
@@ -604,7 +777,7 @@ function scoreClinic(clinic, query, departments, mode, guideKeywords = []) {
   const match = mode === "location"
     ? Math.min(98, 42 + Math.round(distancePoint * 0.75) + qualityPoint)
     : Math.min(98, 32 + departmentPoint + keywordPoint + exactPoint + childIntentPoint + Math.round(qualityPoint * 0.35));
-  const rank = match + distancePoint + locationPoint + specialtyPoint + qualityPoint;
+  const rank = availability.priority + match + departmentPoint + keywordPoint + distancePoint + locationPoint + specialtyPoint + qualityPoint;
 
   return {
     ...clinic,
@@ -612,9 +785,26 @@ function scoreClinic(clinic, query, departments, mode, guideKeywords = []) {
     distanceMeters: proximity.distanceMeters,
     proximitySource: proximity.source,
     matchedArea: proximity.matchedArea,
+    availability,
+    availabilitySort: availability.sortBucket,
+    departmentScore: departmentPoint + keywordPoint + exactPoint + childIntentPoint + specialtyPoint,
+    proximityPoint: distancePoint,
     match,
     rank
   };
+}
+
+function compareScoredClinics(a, b, mode = "word") {
+  if ((b.availabilitySort || 0) !== (a.availabilitySort || 0)) {
+    return (b.availabilitySort || 0) - (a.availabilitySort || 0);
+  }
+  if (mode === "word" && (b.departmentScore || 0) !== (a.departmentScore || 0)) {
+    return (b.departmentScore || 0) - (a.departmentScore || 0);
+  }
+  if ((b.proximityPoint || 0) !== (a.proximityPoint || 0)) {
+    return (b.proximityPoint || 0) - (a.proximityPoint || 0);
+  }
+  return b.rank - a.rank || String(a.name).localeCompare(String(b.name), "ja");
 }
 
 function searchClinics(query = "", mode = "word", guide = null) {
@@ -626,7 +816,7 @@ function searchClinics(query = "", mode = "word", guide = null) {
       departments: departmentResult.departments,
       items: clinics
         .map((clinic) => scoreClinic(clinic, query, [], "location", aiGuide.keywords))
-        .sort((a, b) => b.rank - a.rank || String(a.name).localeCompare(String(b.name), "ja"))
+        .sort((a, b) => compareScoredClinics(a, b, "location"))
         .slice(0, 3)
     };
   }
@@ -634,7 +824,7 @@ function searchClinics(query = "", mode = "word", guide = null) {
   const departments = aiGuide.departments.length ? aiGuide.departments : departmentResult.departments;
   const scored = clinics
     .map((clinic) => scoreClinic(clinic, query, departments, mode, aiGuide.keywords))
-    .sort((a, b) => b.rank - a.rank || String(a.name).localeCompare(String(b.name), "ja"))
+    .sort((a, b) => compareScoredClinics(a, b, mode))
     .slice(0, 3);
 
   return {
@@ -645,16 +835,47 @@ function searchClinics(query = "", mode = "word", guide = null) {
 }
 
 function buildRankText(clinic, index) {
-  if (clinic.proximitySource === "gps") {
-    return `#${index + 1} 近さ ${escapeHtml(clinic.distance)} / マッチ度 ${clinic.match}%`;
-  }
-  if (clinic.proximitySource === "address") {
-    return `#${index + 1} ${escapeHtml(clinic.distance)} / マッチ度 ${clinic.match}%`;
-  }
-  if (clinic.distanceMeters === null) {
-    return `#${index + 1} マッチ度 ${clinic.match}% / 情報充実度 ${clinic.qualityScore || 0}`;
-  }
-  return `#${index + 1} 近さ ${escapeHtml(clinic.distance)} / マッチ度 ${clinic.match}%`;
+  return `#${index + 1}`;
+}
+
+function renderResultMetrics(clinic) {
+  const availability = clinic.availability || analyzeClinicHours(clinic);
+  const distance = clinic.distanceMeters === null ? "距離未設定" : clinic.distance;
+  const department = compactDisplay(clinic.departmentList?.[0] || clinic.departments, 14);
+  return `
+    <div class="result-metrics" aria-label="候補の目安">
+      <div class="result-metric metric-open ${escapeHtml(availability.className)}">
+        <span class="metric-icon icon-open" aria-hidden="true"></span>
+        <span><strong>${escapeHtml(shortAvailabilityLabel(availability))}</strong><small>${escapeHtml(availability.note)}</small></span>
+      </div>
+      <div class="result-metric metric-near">
+        <span class="metric-icon icon-near" aria-hidden="true"></span>
+        <span><strong>${escapeHtml(distance)}</strong><small>ここから</small></span>
+      </div>
+      <div class="result-metric metric-match">
+        <span class="metric-icon icon-match" aria-hidden="true"></span>
+        <span><strong>${escapeHtml(String(clinic.match))}%</strong><small>${escapeHtml(department)}</small></span>
+      </div>
+    </div>
+  `;
+}
+
+function renderHoursPanel(clinic, compact = false) {
+  const availability = clinic.availability || analyzeClinicHours(clinic);
+  const today = compact ? compactDisplay(availability.today, 58) : availability.today;
+  return `
+    <div class="hours-panel ${escapeHtml(availability.className)}">
+      <div class="hours-head">
+        <span class="metric-icon icon-open" aria-hidden="true"></span>
+        <strong>${escapeHtml(shortAvailabilityLabel(availability))}</strong>
+        <em>${escapeHtml(availability.note)}</em>
+      </div>
+      <div class="hours-mini-table">
+        <div><span>今日</span><strong>${escapeHtml(today)}</strong></div>
+        <div><span>休み</span><strong>${escapeHtml(compactDisplay(availability.holiday, compact ? 44 : 120))}</strong></div>
+      </div>
+    </div>
+  `;
 }
 
 function renderClinics(items = currentResults) {
@@ -670,22 +891,16 @@ function renderClinics(items = currentResults) {
         <div class="result-rank">${rankText}</div>
         <div class="result-top">
           <div>
-            <span class="status ${escapeHtml(clinic.statusClass)}">${escapeHtml(clinic.status)}</span>
-            <span class="verified-pill">${escapeHtml(clinic.verified)}</span>
             <h3>${escapeHtml(clinic.name)}</h3>
             <p>${escapeHtml(clinic.departments)}</p>
           </div>
           <div class="map-tile" aria-hidden="true"></div>
         </div>
+        ${renderResultMetrics(clinic)}
         <ul class="result-facts">
           <li><strong>住所</strong><span>${escapeHtml(clinic.address)}</span></li>
-          <li><strong>電話</strong><span>${escapeHtml(displayValue(clinic.phone))}</span></li>
-          <li><strong>距離</strong><span>${escapeHtml(clinic.distance)}</span></li>
         </ul>
-        <div class="result-hours">
-          <strong>診療時間</strong><span>${escapeHtml(clinic.hours)}</span>
-          <strong>休診日</strong><span>${escapeHtml(clinic.holiday)}</span>
-        </div>
+        ${renderHoursPanel(clinic, true)}
         <div class="result-actions">
           <a class="generated-action action-phone primary ${phoneHref ? "" : "disabled"}" href="${phoneHref || "#detail"}" aria-label="電話" title="電話"><span>電話</span></a>
           <a class="generated-action action-detail" href="#detail" data-detail-id="${escapeHtml(clinic.id)}" aria-label="詳細" title="詳細"><span>詳細</span></a>
@@ -715,16 +930,18 @@ function renderDetail(clinic = currentResults[0]) {
   const meta = document.querySelector("#detail-meta");
   const fields = document.querySelector("#detail-fields");
   if (!heading || !overview || !statusRow || !name || !meta || !fields) return;
+  const availability = clinic.availability || analyzeClinicHours(clinic);
 
   heading.textContent = clinic.name;
-  if (copy) copy.textContent = "項目名つきで確認できます。";
+  if (copy) copy.textContent = "必要な項目だけ確認できます。";
   overview.innerHTML = `
     <article><strong>基本情報</strong><span>${escapeHtml(clinic.address)}<br>${escapeHtml(displayValue(clinic.phone))}</span></article>
-    <article><strong>診療時間</strong><span>${escapeMultiline(clinic.hours)}</span></article>
+    <article><strong>今の目安</strong><span>${escapeHtml(shortAvailabilityLabel(availability))}<br>${escapeHtml(availability.today)}<br>${escapeHtml(availability.note)}</span></article>
     <article><strong>対応状況</strong><span>救急: ${escapeHtml(clinic.emergencyCare)}<br>夜間: ${escapeHtml(clinic.nightCare)}<br>休日: ${escapeHtml(clinic.holidayCare)}</span></article>
   `;
   statusRow.innerHTML = `
     <span class="status ${escapeHtml(clinic.statusClass)}">${escapeHtml(clinic.status)}</span>
+    <span class="status ${escapeHtml(availability.className)}">${escapeHtml(availability.label)}</span>
     <span>${escapeHtml(clinic.until)}</span>
     <span>${escapeHtml(clinic.verified)}</span>
     <span>抽出品質 ${escapeHtml(clinic.quality)}</span>
@@ -732,12 +949,13 @@ function renderDetail(clinic = currentResults[0]) {
   name.textContent = clinic.name;
   meta.textContent = `${clinic.departments} / ${clinic.address}`;
   fields.innerHTML = `
+    ${renderHoursPanel(clinic, false)}
     <p><strong>近さ</strong><span>${escapeHtml(clinic.distance)}</span></p>
     <p><strong>住所</strong><span>${escapeHtml(clinic.address)}</span></p>
     <p><strong>電話</strong><span>${escapeHtml(displayValue(clinic.phone))}</span></p>
     <p><strong>診療科目</strong><span>${escapeHtml(clinic.departments)}</span></p>
-    <p><strong>診療時間</strong><span>${escapeMultiline(clinic.hours)}</span></p>
-    <p><strong>休診日</strong><span>${escapeMultiline(clinic.holiday)}</span></p>
+    <p><strong>診療時間原文</strong><span>${escapeMultiline(clinic.hours)}</span></p>
+    <p><strong>休診日原文</strong><span>${escapeMultiline(clinic.holiday)}</span></p>
     <p><strong>救急対応</strong><span>${escapeHtml(clinic.emergencyCare)}</span></p>
     <p><strong>夜間対応</strong><span>${escapeHtml(clinic.nightCare)}</span></p>
     <p><strong>休日診療</strong><span>${escapeHtml(clinic.holidayCare)}</span></p>
@@ -753,7 +971,11 @@ function renderDetail(clinic = currentResults[0]) {
 
 function updateResultHeader(label, copy, summary) {
   document.querySelector("#results-title").textContent = label;
-  document.querySelector("#results-copy").textContent = copy;
+  const copyNode = document.querySelector("#results-copy");
+  if (copyNode) {
+    copyNode.textContent = copy;
+    copyNode.hidden = !copy;
+  }
   document.querySelector("#result-summary").innerHTML = `
     <span>並び順</span>
     <strong>${summary}</strong>
@@ -895,18 +1117,18 @@ function renderConversationResult(text, result, options = {}) {
   const log = document.querySelector("#conversation-log");
   const guide = normalizeGuideFromApi(options.guide);
   const summaryLabel = guide.source === "gemini"
-    ? "AI補正 + 近さ順"
+    ? "今 / 科目 / 近さ"
     : options.pending
-      ? "AI確認中 + 近さ順"
-      : "入力内容 + 近さ順";
+      ? "AI確認中"
+      : "今 / 科目 / 近さ";
   const copy = guide.source === "gemini"
-    ? "AIで整理しました。"
+    ? ""
     : options.pending
-      ? "入力停止後に更新。AIでも確認中です。"
-      : "入力停止後に更新しました。";
+      ? "入力が止まってから整えます。"
+      : "";
   renderDepartmentNote(result, text, guide, "#conversation-guide");
   renderClinics(result.items);
-  updateResultHeader(`「${text}」の候補`, copy, summaryLabel);
+  updateResultHeader("候補", copy, summaryLabel);
   if (log) {
     log.textContent = `${text} ${summarizeAiGuide(text, result, guide)}${options.pending ? " 会話の内容を確認しています。" : ""}`;
   }
@@ -918,9 +1140,9 @@ function runFuzzySearch(query, mode = "word") {
   renderClinics(result.items);
   const label = mode === "location" ? `${locationShortLabel()}に近い候補` : `「${query}」の候補`;
   const copy = mode === "location"
-    ? "現在地から表示。"
-    : "入力に合わせて表示。";
-  updateResultHeader(label, copy, "近い順 + マッチ度順");
+    ? ""
+    : "";
+  updateResultHeader(label, copy, "今 / 科目 / 近さ");
   document.querySelector("#results")?.scrollIntoView({ behavior: "smooth" });
 }
 
@@ -932,22 +1154,22 @@ function renderNearbyResults() {
   const hasGpsDistance = hasCoordinates(userLocation) && hasAnyFacilityCoordinates();
   const hasAddressFallback = userLocation.areaTokens.length > 0;
   const title = hasGpsDistance
-    ? "現在地から近い候補"
+    ? "近くの候補"
     : hasAddressFallback
-      ? `${userLocation.address}周辺の候補`
+      ? "近くの候補"
       : hasCoordinates(userLocation)
-        ? "現在地を取得しました"
-        : "掲載情報が多い候補";
+        ? "近くの候補"
+        : "候補";
   const copy = hasGpsDistance
-    ? "GPSの現在地から表示。"
+    ? ""
     : hasAddressFallback
-      ? "保存住所に近い地域を優先表示。"
-      : "入力すると更新します。";
+      ? ""
+      : "症状を入れると候補が変わります。";
   const summary = hasGpsDistance
-    ? "GPS実距離 + マッチ度順"
+    ? "今 / 近さ / マッチ度"
     : hasAddressFallback
-      ? "住所の近さ + マッチ度順"
-      : "情報充実度 + マッチ度順";
+      ? "今 / 住所 / マッチ度"
+      : "今 / 科目 / 近さ";
   updateResultHeader(title, copy, summary);
   const guidePanel = document.querySelector("#conversation-guide");
   if (guidePanel) guidePanel.innerHTML = "";
@@ -962,10 +1184,10 @@ async function refreshNearbyResultsFromServer() {
   const serverResult = await requestServerSearch("現在地", { mode: "location", limit: 3 }).catch(() => null);
   if (!serverResult || requestId !== aiRequestSeq) return;
   renderClinics(serverResult.items);
-  const summary = userLocation.areaTokens.length ? "DB検索 + 住所の近さ順" : "DB検索 + 情報充実度順";
+  const summary = userLocation.areaTokens.length ? "今 / 住所 / マッチ度" : "今 / 科目 / 近さ";
   updateResultHeader(
-    userLocation.areaTokens.length ? `${userLocation.address}周辺の候補` : "近くの候補",
-    "DBから上位だけ取得しています。",
+    "近くの候補",
+    "",
     summary
   );
 }
@@ -1051,12 +1273,12 @@ function renderSearchPending(query) {
   if (guidePanel) guidePanel.innerHTML = "";
 
   if (!text) {
-    updateResultHeader("入力を待っています", "入力が止まってから近い候補を表示します。", "入力停止後に検索");
+    updateResultHeader("近くの候補", "症状を入れると候補が変わります。", "今 / 近さ / マッチ度");
     if (log) log.textContent = "入力が止まってから候補を更新します。";
     return;
   }
 
-  updateResultHeader(`「${text}」を入力中`, "入力が止まってから候補を更新します。", "約1.4秒後に検索");
+  updateResultHeader("入力中", "少し待つと候補が変わります。", "約2秒後");
   if (log) log.textContent = `「${text}」の入力が止まってから候補を更新します。`;
 }
 
@@ -1141,26 +1363,63 @@ function setupVoiceInput() {
 
   const recognition = new SpeechRecognition();
   recognition.lang = "ja-JP";
+  recognition.continuous = true;
   recognition.interimResults = true;
   recognition.maxAlternatives = 1;
+  let isListening = false;
+  let voiceSilenceTimer = 0;
+
+  const clearVoiceSilenceTimer = () => {
+    clearTimeout(voiceSilenceTimer);
+    voiceSilenceTimer = 0;
+  };
+
+  const stopAfterSilence = () => {
+    clearVoiceSilenceTimer();
+    voiceSilenceTimer = window.setTimeout(() => {
+      if (isListening) recognition.stop();
+    }, VOICE_SILENCE_MS);
+  };
 
   recognition.addEventListener("start", () => {
+    isListening = true;
     voiceButton.classList.add("is-listening");
     voiceButton.textContent = "聞き取り中";
+    stopAfterSilence();
   });
   recognition.addEventListener("end", () => {
+    isListening = false;
+    clearVoiceSilenceTimer();
     voiceButton.classList.remove("is-listening");
     voiceButton.textContent = "音声";
+    scheduleConversationUpdate(wordInput.value);
   });
   recognition.addEventListener("result", (event) => {
     const text = [...event.results].map((result) => result[0]?.transcript || "").join("");
     if (text) {
       wordInput.value = text;
-      updateConversation(text, { scroll: true, immediateAi: true });
+      scheduleConversationUpdate(text);
+      stopAfterSilence();
     }
   });
+  recognition.addEventListener("error", () => {
+    isListening = false;
+    clearVoiceSilenceTimer();
+    voiceButton.classList.remove("is-listening");
+  });
 
-  voiceButton.addEventListener("click", () => recognition.start());
+  voiceButton.addEventListener("click", () => {
+    if (isListening) {
+      recognition.stop();
+      return;
+    }
+    wordInput.focus();
+    try {
+      recognition.start();
+    } catch {
+      voiceButton.classList.remove("is-listening");
+    }
+  });
 }
 
 function openPanel(id) {
