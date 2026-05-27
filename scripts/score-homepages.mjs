@@ -351,15 +351,36 @@ function analyzeHtml(url, finalUrl, status, ok, elapsedMs, bytes, html, cssSigna
   );
   const snsScore = hasSns ? 100 : hasOg ? 35 : 0;
 
+  const effectiveScores = ok
+    ? {
+      design: designScore,
+      clarity: clarityScore,
+      content: contentScore,
+      cleanliness: cleanlinessScore,
+      speed: speedScore,
+      seo: seoScore,
+      mobile: mobileScore,
+      sns: snsScore
+    }
+    : {
+      design: 0,
+      clarity: 0,
+      content: 0,
+      cleanliness: 0,
+      speed: 0,
+      seo: 0,
+      mobile: 0,
+      sns: 0
+    };
   const totalScore = clampScore(
-    designScore * 0.16
-    + clarityScore * 0.16
-    + contentScore * 0.16
-    + cleanlinessScore * 0.12
-    + speedScore * 0.14
-    + seoScore * 0.14
-    + mobileScore * 0.09
-    + snsScore * 0.03
+    effectiveScores.design * 0.16
+    + effectiveScores.clarity * 0.16
+    + effectiveScores.content * 0.16
+    + effectiveScores.cleanliness * 0.12
+    + effectiveScores.speed * 0.14
+    + effectiveScores.seo * 0.14
+    + effectiveScores.mobile * 0.09
+    + effectiveScores.sns * 0.03
   );
   const grade = totalScore >= 85 ? "A" : totalScore >= 70 ? "B" : totalScore >= 55 ? "C" : totalScore >= 40 ? "D" : "E";
   const notes = [];
@@ -410,14 +431,14 @@ function analyzeHtml(url, finalUrl, status, ok, elapsedMs, bytes, html, cssSigna
     has_map: hasMap ? "1" : "0",
     has_sns: hasSns ? "1" : "0",
     sns_platforms: snsPlatforms.join("|"),
-    design_score: designScore,
-    clarity_score: clarityScore,
-    content_score: contentScore,
-    cleanliness_score: cleanlinessScore,
-    speed_score: speedScore,
-    seo_score: seoScore,
-    mobile_score: mobileScore,
-    sns_score: snsScore,
+    design_score: effectiveScores.design,
+    clarity_score: effectiveScores.clarity,
+    content_score: effectiveScores.content,
+    cleanliness_score: effectiveScores.cleanliness,
+    speed_score: effectiveScores.speed,
+    seo_score: effectiveScores.seo,
+    mobile_score: effectiveScores.mobile,
+    sns_score: effectiveScores.sns,
     total_score: totalScore,
     grade,
     notes: notes.join("; ")

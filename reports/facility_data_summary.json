@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-27T22:09:24.778Z",
+  "generatedAt": "2026-05-27T22:36:41.993Z",
   "source": "data/facilities.json + reports/hp_score_results.csv",
   "facilities": {
     "total": 10782,
@@ -22,27 +22,30 @@
     "reachable": 1102
   },
   "facilityScores": {
-    "scoredTotal": 10782,
-    "reachable": 8142,
-    "officialTarget": 252,
-    "iryouMapTarget": 10530,
+    "totalRows": 10782,
+    "scoredTotal": 251,
+    "reachable": 243,
+    "failed": 8,
+    "officialTarget": 251,
+    "noOfficialTarget": 10531,
+    "iryouMapTarget": 0,
     "gradeCounts": {
-      "C": 1372,
-      "D": 14,
-      "A": 132,
-      "E": 9209,
-      "B": 55
+      "D": 5,
+      "A": 131,
+      "C": 53,
+      "B": 53,
+      "E": 9
     },
     "averageScores": {
-      "total": 29,
-      "design": 20,
-      "clarity": 18,
-      "content": 12,
-      "cleanliness": 60,
-      "speed": 72,
-      "seo": 26,
-      "mobile": 7,
-      "sns": 1
+      "total": 80,
+      "design": 81,
+      "clarity": 80,
+      "content": 68,
+      "cleanliness": 92,
+      "speed": 93,
+      "seo": 78,
+      "mobile": 76,
+      "sns": 50
     }
   },
   "careFlags": {
@@ -149,21 +152,21 @@
   ],
   "hpScores": {
     "averageScores": {
-      "design": 38,
-      "clarity": 49,
-      "content": 34,
-      "cleanliness": 70,
+      "design": 34,
+      "clarity": 42,
+      "content": 32,
+      "cleanliness": 55,
       "speed": 66,
-      "seo": 44,
+      "seo": 34,
       "mobile": 27,
       "sns": 8,
-      "total": 46
+      "total": 41
     },
     "gradeCounts": {
-      "C": 311,
-      "D": 14,
+      "C": 309,
+      "D": 13,
       "B": 298,
-      "E": 793,
+      "E": 796,
       "A": 127
     },
     "sourceCounts": {

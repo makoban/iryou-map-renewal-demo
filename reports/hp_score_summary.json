@@ -3,21 +3,21 @@
   "total_urls": 1543,
   "reachable_urls": 1102,
   "average_scores": {
-    "total": 46,
-    "design": 38,
-    "clarity": 49,
-    "content": 34,
-    "cleanliness": 70,
+    "total": 41,
+    "design": 34,
+    "clarity": 42,
+    "content": 32,
+    "cleanliness": 55,
     "speed": 66,
-    "seo": 44,
+    "seo": 34,
     "mobile": 27,
     "sns": 8
   },
   "grade_counts": {
-    "C": 311,
-    "D": 14,
+    "C": 309,
+    "D": 13,
     "B": 298,
-    "E": 793,
+    "E": 796,
     "A": 127
   },
   "source_counts": {
@@ -168,164 +168,164 @@
   ],
   "bottom_20": [
     {
-      "total_score": 9,
-      "grade": "E",
-      "source_kind": "official",
-      "title": "",
-      "url": "http://www.hayakawa-s-clinic.com/",
-      "notes": "接続/HTTP要確認:fetch failed; HTTPSではない; viewportなし; レスポンシブCSS弱い; titleなし; descriptionなし; h1なし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
-    },
-    {
-      "total_score": 11,
-      "grade": "E",
-      "source_kind": "official",
-      "title": "",
-      "url": "https://ajimasekkotsuin.com/",
-      "notes": "接続/HTTP要確認:fetch failed; viewportなし; レスポンシブCSS弱い; titleなし; descriptionなし; h1なし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
-    },
-    {
-      "total_score": 11,
-      "grade": "E",
-      "source_kind": "official",
-      "title": "",
-      "url": "https://shinohara-hari.com/",
-      "notes": "接続/HTTP要確認:fetch failed; viewportなし; レスポンシブCSS弱い; titleなし; descriptionなし; h1なし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
-    },
-    {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=2",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=20",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=201",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=202",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=203",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=204",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=205",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=206",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=207",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=209",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=21",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=210",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=211",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=212",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=22",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=23",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     },
     {
-      "total_score": 18,
+      "total_score": 0,
       "grade": "E",
       "source_kind": "iryou_map",
       "title": "503 Service Temporarily Unavailable",
       "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=24",
-      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
+    },
+    {
+      "total_score": 0,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=25",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
+    },
+    {
+      "total_score": 0,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=27",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
+    },
+    {
+      "total_score": 0,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=28",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出; 接続不可のため0点"
     }
   ]
 }

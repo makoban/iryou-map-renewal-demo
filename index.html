@@ -7,7 +7,7 @@
   <meta name="description" content="症状を伝えるだけで簡単検索。今から行ける受診先へ。東海地方専門の医療機関検索デモです。">
   <title>医療MAP 症状を伝えるだけで簡単検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css?v=20260528-score-sort-v1">
+  <link rel="stylesheet" href="./styles.css?v=20260528-official-score-v1">
 </head>
 <body>
   <header class="app-header">
@@ -177,7 +177,7 @@
 
       <section class="tab-panel" data-tab-panel="scores">
         <h3>医院別HP採点シート</h3>
-        <p>施設ごとに、公式HPまたは医療MAP内ページを採点対象としてひも付けています。点数はデザイン性、わかりやすさ、内容、清潔感、速度、SEO、スマホ対応、SNSの自動評価です。</p>
+        <p>施設ごとに公式HPを採点対象としてひも付けています。公式HPがない施設はリンクなし、0点、対象外として表示します。</p>
         <div class="score-metric-grid" id="score-summary-grid">
           <article><span>施設行数</span><strong>読み込み中</strong></article>
           <article><span>取得成功</span><strong>読み込み中</strong></article>
@@ -194,11 +194,12 @@
             <option value="C">C</option>
             <option value="D">D</option>
             <option value="E">E</option>
+            <option value="対象外">対象外</option>
           </select>
           <select id="score-source-filter" aria-label="採点種別で絞り込み">
             <option value="">種別すべて</option>
             <option value="公式HP">公式HP</option>
-            <option value="医療MAP">医療MAP</option>
+            <option value="公式HPなし">公式HPなし</option>
           </select>
         </div>
         <p class="score-count" id="score-count">読み込み中</p>
@@ -284,6 +285,6 @@
     <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
-  <script src="./app.js?v=20260528-score-sort-v1"></script>
+  <script src="./app.js?v=20260528-official-score-v1"></script>
 </body>
 </html>

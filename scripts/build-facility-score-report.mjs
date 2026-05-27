@@ -159,12 +159,40 @@ function buildScoreMap(scoreRows) {
 
 function findScoreForFacility(facility, scoreMap) {
   const officialKey = normalizeUrl(facility.officialUrl);
-  const mapKey = normalizeUrl(facility.url || facility.finalUrl || facility.sourceUrl);
+  if (!officialKey) {
+    return {
+      targetUrl: "",
+      targetType: "公式HPなし",
+      row: null
+    };
+  }
   return {
-    targetUrl: officialKey || mapKey,
-    targetType: officialKey ? "公式HP" : "医療MAP",
-    row: scoreMap.get(officialKey) || scoreMap.get(mapKey) || null
+    targetUrl: officialKey,
+    targetType: "公式HP",
+    row: scoreMap.get(officialKey) || null
   };
+}
+
+function scoreCell(row, field) {
+  return row?.ok === "1" ? row[field] || "0" : "0";
+}
+
+function gradeCell(row, targetType) {
+  if (targetType === "公式HPなし") return "対象外";
+  return row?.ok === "1" ? row.grade || "E" : "E";
+}
+
+function statusCell(row, targetType) {
+  if (targetType === "公式HPなし") return "公式HPなし";
+  if (!row) return "未取得";
+  return row.ok === "1" ? "取得成功" : "取得失敗";
+}
+
+function scoreNote(row, targetType) {
+  if (targetType === "公式HPなし") return "公式HP欄が空のためHP採点対象外";
+  if (!row) return "公式HP URLの採点結果なし";
+  if (row.ok !== "1") return `${row.notes || "接続先を取得できないため0点"}; 接続不可のため0点`;
+  return row.notes || "";
 }
 
 function buildFacilityRows(facilities, scoreMap) {
@@ -180,19 +208,19 @@ function buildFacilityRows(facilities, scoreMap) {
       "公式HP": displayValue(facility.officialUrl),
       "医療MAP URL": displayValue(facility.url || facility.sourceUrl),
       "採点対象URL": targetUrl,
-      "採点種別": row?.source_kind === "official" || targetType === "公式HP" ? "公式HP" : "医療MAP",
-      "取得可否": row ? (row.ok === "1" ? "取得成功" : "取得失敗") : "未採点",
+      "採点種別": targetType,
+      "取得可否": statusCell(row, targetType),
       "HTTP状態": row?.http_status || "",
-      "総合点": row?.total_score || "",
-      "評価": row?.grade || "",
-      "デザイン性": row?.design_score || "",
-      "わかりやすさ": row?.clarity_score || "",
-      "内容充実": row?.content_score || "",
-      "清潔感": row?.cleanliness_score || "",
-      "読み込み速度": row?.speed_score || "",
-      "SEO": row?.seo_score || "",
-      "スマホ対応": row?.mobile_score || "",
-      "SNS": row?.sns_score || "",
+      "総合点": scoreCell(row, "total_score"),
+      "評価": gradeCell(row, targetType),
+      "デザイン性": scoreCell(row, "design_score"),
+      "わかりやすさ": scoreCell(row, "clarity_score"),
+      "内容充実": scoreCell(row, "content_score"),
+      "清潔感": scoreCell(row, "cleanliness_score"),
+      "読み込み速度": scoreCell(row, "speed_score"),
+      "SEO": scoreCell(row, "seo_score"),
+      "スマホ対応": scoreCell(row, "mobile_score"),
+      "SNS": scoreCell(row, "sns_score"),
       "診療時間あり": hasKnownValue(facility.hours) ? "あり" : "なし",
       "休診日あり": hasKnownValue(facility.holiday) ? "あり" : "なし",
       "緯度経度あり": Number.isFinite(Number(facility.lat)) && Number.isFinite(Number(facility.lng)) ? "あり" : "なし",
@@ -201,7 +229,7 @@ function buildFacilityRows(facilities, scoreMap) {
       "休日対応": displayValue(facility.holidayCare, "不明"),
       "抽出品質": displayValue(facility.quality, "未確認"),
       "要確認理由": displayValue(facility.reviewReason),
-      "採点メモ": row?.notes || ""
+      "採点メモ": scoreNote(row, targetType)
     };
   });
 }
@@ -212,22 +240,21 @@ function buildSummary(facilities, scoreRows, facilityRows) {
   const withHoliday = facilities.filter((facility) => hasKnownValue(facility.holiday)).length;
   const geocoded = facilities.filter((facility) => Number.isFinite(Number(facility.lat)) && Number.isFinite(Number(facility.lng))).length;
   const departmentKnown = facilities.filter((facility) => displayValue(facility.departments) && facility.departments !== "診療科目未確認").length;
-  const scoredFacilities = facilityRows.filter((row) => row["取得可否"] !== "未採点");
-  const reachableFacilities = facilityRows.filter((row) => row["取得可否"] === "取得成功");
-  const officialScoredFacilities = facilityRows.filter((row) => row["採点種別"] === "公式HP");
-  const iryouMapScoredFacilities = facilityRows.filter((row) => row["採点種別"] === "医療MAP");
+  const officialTargetFacilities = facilityRows.filter((row) => row["採点種別"] === "公式HP");
+  const reachableFacilities = officialTargetFacilities.filter((row) => row["取得可否"] === "取得成功");
+  const noOfficialFacilities = facilityRows.filter((row) => row["採点種別"] === "公式HPなし");
 
   const averageScores = Object.fromEntries(scoreFields.map((field) => [field.replace("_score", ""), average(scoreRows, field)]));
   const facilityAverageScores = {
-    total: average(scoredFacilities, "総合点"),
-    design: average(scoredFacilities, "デザイン性"),
-    clarity: average(scoredFacilities, "わかりやすさ"),
-    content: average(scoredFacilities, "内容充実"),
-    cleanliness: average(scoredFacilities, "清潔感"),
-    speed: average(scoredFacilities, "読み込み速度"),
-    seo: average(scoredFacilities, "SEO"),
-    mobile: average(scoredFacilities, "スマホ対応"),
-    sns: average(scoredFacilities, "SNS")
+    total: average(officialTargetFacilities, "総合点"),
+    design: average(officialTargetFacilities, "デザイン性"),
+    clarity: average(officialTargetFacilities, "わかりやすさ"),
+    content: average(officialTargetFacilities, "内容充実"),
+    cleanliness: average(officialTargetFacilities, "清潔感"),
+    speed: average(officialTargetFacilities, "読み込み速度"),
+    seo: average(officialTargetFacilities, "SEO"),
+    mobile: average(officialTargetFacilities, "スマホ対応"),
+    sns: average(officialTargetFacilities, "SNS")
   };
 
   return {
@@ -254,11 +281,14 @@ function buildSummary(facilities, scoreRows, facilityRows) {
       reachable: scoreRows.filter((row) => row.ok === "1").length
     },
     facilityScores: {
-      scoredTotal: scoredFacilities.length,
+      totalRows: facilityRows.length,
+      scoredTotal: officialTargetFacilities.length,
       reachable: reachableFacilities.length,
-      officialTarget: officialScoredFacilities.length,
-      iryouMapTarget: iryouMapScoredFacilities.length,
-      gradeCounts: countBy(scoredFacilities, (row) => row["評価"]),
+      failed: officialTargetFacilities.filter((row) => row["取得可否"] !== "取得成功").length,
+      officialTarget: officialTargetFacilities.length,
+      noOfficialTarget: noOfficialFacilities.length,
+      iryouMapTarget: 0,
+      gradeCounts: countBy(officialTargetFacilities, (row) => row["評価"]),
       averageScores: facilityAverageScores
     },
     careFlags: {
@@ -290,10 +320,11 @@ function buildSummaryCsv(summary) {
     ["施設", "休診日あり", summary.facilities.withHoliday],
     ["施設", "緯度経度あり", summary.facilities.geocoded],
     ["施設", "科目あり", summary.facilities.departmentKnown],
-    ["施設採点", "施設採点行数", summary.facilityScores.scoredTotal],
+    ["施設採点", "施設行数", summary.facilityScores.totalRows],
+    ["施設採点", "公式HP採点対象", summary.facilityScores.scoredTotal],
     ["施設採点", "取得成功施設", summary.facilityScores.reachable],
-    ["施設採点", "公式HP採点対象", summary.facilityScores.officialTarget],
-    ["施設採点", "医療MAP採点対象", summary.facilityScores.iryouMapTarget],
+    ["施設採点", "取得失敗施設", summary.facilityScores.failed],
+    ["施設採点", "公式HPなし", summary.facilityScores.noOfficialTarget],
     ["URL", "採点済みURL", summary.urls.scoredTotal],
     ["URL", "医療MAP内URL", summary.urls.scoredIryouMap],
     ["URL", "公式HP等URL", summary.urls.scoredOfficial],

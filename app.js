@@ -965,7 +965,7 @@ function renderFacilityDataSummary() {
     { label: "診療時間あり", value: `${formatNumber(facilities.withHours)}件` },
     { label: "緯度経度あり", value: `${formatNumber(facilities.geocoded)}件` },
     { label: "HP採点URL", value: `${formatNumber(urls.scoredTotal)}件` },
-    { label: "医院別採点", value: `${formatNumber(scores.scoredTotal)}件` },
+    { label: "公式HP対象", value: `${formatNumber(scores.scoredTotal)}件` },
     { label: "救急情報あり", value: `${formatNumber(care.emergency)}件` },
     { label: "取得成功施設", value: `${formatNumber(scores.reachable)}件` }
   ]);
@@ -980,9 +980,9 @@ function renderScoreSummary() {
   const grades = scores.gradeCounts || {};
   renderMetricGrid(container, [
     { label: "施設行数", value: `${formatNumber(facilities.total)}件` },
-    { label: "採点済み", value: `${formatNumber(scores.scoredTotal)}件` },
+    { label: "公式HP対象", value: `${formatNumber(scores.scoredTotal)}件` },
     { label: "取得成功", value: `${formatNumber(scores.reachable)}件` },
-    { label: "公式HP対象", value: `${formatNumber(scores.officialTarget)}件` },
+    { label: "公式HPなし", value: `${formatNumber(scores.noOfficialTarget)}件` },
     { label: "平均点", value: `${formatNumber(averages.total)}点` },
     { label: "スマホ平均", value: `${formatNumber(averages.mobile)}点` },
     { label: "A評価", value: `${formatNumber(grades.A || 0)}件` },
@@ -1007,10 +1007,10 @@ function scoreSortValue(row, column) {
   const value = row[column.field];
   if (column.type === "number") return toFiniteNumber(value);
   if (column.type === "grade") {
-    return { A: 5, B: 4, C: 3, D: 2, E: 1 }[String(value).trim()] || 0;
+    return { A: 5, B: 4, C: 3, D: 2, E: 1, "対象外": 0 }[String(value).trim()] || 0;
   }
   if (column.type === "status") {
-    return { "取得成功": 3, "取得失敗": 2, "未採点": 1 }[String(value).trim()] || 0;
+    return { "取得成功": 4, "取得失敗": 3, "未取得": 2, "公式HPなし": 1 }[String(value).trim()] || 0;
   }
   if (column.field === "住所") return `${row["住所"] || ""} ${row["診療科目"] || ""}`;
   return displayValue(value, "");
@@ -1133,8 +1133,8 @@ async function ensureBackstageReports() {
   }
 
   backstageReportsLoading = Promise.all([
-    fetch("./reports/facility_data_summary.json?v=20260528-score-sheet-v1", { cache: "force-cache" }),
-    fetch("./reports/facility_score_sheet.csv?v=20260528-score-sheet-v1", { cache: "force-cache" })
+    fetch("./reports/facility_data_summary.json?v=20260528-official-score-v1", { cache: "force-cache" }),
+    fetch("./reports/facility_score_sheet.csv?v=20260528-official-score-v1", { cache: "force-cache" })
   ]).then(async ([summaryResponse, scoreResponse]) => {
     if (!summaryResponse.ok || !scoreResponse.ok) throw new Error("backstage_reports_failed");
     facilityDataSummary = await summaryResponse.json();
