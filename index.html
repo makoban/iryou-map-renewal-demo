@@ -7,7 +7,7 @@
   <meta name="description" content="症状を伝えるだけで簡単検索。今から行ける受診先へ。東海地方専門の医療機関検索デモです。">
   <title>医療MAP 症状を伝えるだけで簡単検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css?v=20260528-score-sheet-v1">
+  <link rel="stylesheet" href="./styles.css?v=20260528-score-sort-v1">
 </head>
 <body>
   <header class="app-header">
@@ -206,21 +206,25 @@
           <table class="score-table">
             <thead>
               <tr>
-                <th>医院</th>
-                <th>採点</th>
-                <th>評価</th>
-                <th>種別</th>
-                <th>状態</th>
-                <th>デザイン</th>
-                <th>内容</th>
-                <th>スマホ</th>
-                <th>SEO</th>
-                <th>住所・科目</th>
+                <th><button type="button" data-score-sort="name">医院</button></th>
+                <th><button type="button" data-score-sort="total">総合</button></th>
+                <th><button type="button" data-score-sort="grade">評価</button></th>
+                <th><button type="button" data-score-sort="source">種別</button></th>
+                <th><button type="button" data-score-sort="status">状態</button></th>
+                <th><button type="button" data-score-sort="design">デザイン</button></th>
+                <th><button type="button" data-score-sort="clarity">わかりやすさ</button></th>
+                <th><button type="button" data-score-sort="content">内容</button></th>
+                <th><button type="button" data-score-sort="cleanliness">清潔感</button></th>
+                <th><button type="button" data-score-sort="speed">速度</button></th>
+                <th><button type="button" data-score-sort="seo">SEO</button></th>
+                <th><button type="button" data-score-sort="mobile">スマホ</button></th>
+                <th><button type="button" data-score-sort="sns">SNS</button></th>
+                <th><button type="button" data-score-sort="address">住所・科目</button></th>
                 <th>メモ</th>
               </tr>
             </thead>
             <tbody id="score-table-body">
-              <tr><td colspan="11">読み込み中</td></tr>
+              <tr><td colspan="15">読み込み中</td></tr>
             </tbody>
           </table>
         </div>
@@ -280,6 +284,6 @@
     <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
-  <script src="./app.js?v=20260528-score-sheet-v1"></script>
+  <script src="./app.js?v=20260528-score-sort-v1"></script>
 </body>
 </html>

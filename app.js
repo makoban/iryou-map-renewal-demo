@@ -171,6 +171,7 @@ let backstageReportsLoaded = false;
 let backstageReportsLoading = null;
 let facilityScoreRows = [];
 let facilityDataSummary = null;
+let scoreSortState = { key: "total", direction: "desc" };
 
 const RESULT_LIMIT = 5;
 const SEARCH_IDLE_DELAY_MS = 1800;
@@ -180,6 +181,22 @@ const MIN_AI_QUERY_LENGTH = 2;
 const LOCATION_STORAGE_KEY = "iryouMapLocationPrefs";
 const LOCATION_AUTO_SESSION_KEY = "iryouMapAutoLocationTried";
 const aiGuideCache = new Map();
+const scoreSortColumns = {
+  name: { label: "医院", field: "施設名", type: "text", defaultDirection: "asc" },
+  total: { label: "総合", field: "総合点", type: "number", defaultDirection: "desc" },
+  grade: { label: "評価", field: "評価", type: "grade", defaultDirection: "desc" },
+  source: { label: "種別", field: "採点種別", type: "text", defaultDirection: "asc" },
+  status: { label: "状態", field: "取得可否", type: "status", defaultDirection: "desc" },
+  design: { label: "デザイン", field: "デザイン性", type: "number", defaultDirection: "desc" },
+  clarity: { label: "わかりやすさ", field: "わかりやすさ", type: "number", defaultDirection: "desc" },
+  content: { label: "内容", field: "内容充実", type: "number", defaultDirection: "desc" },
+  cleanliness: { label: "清潔感", field: "清潔感", type: "number", defaultDirection: "desc" },
+  speed: { label: "速度", field: "読み込み速度", type: "number", defaultDirection: "desc" },
+  seo: { label: "SEO", field: "SEO", type: "number", defaultDirection: "desc" },
+  mobile: { label: "スマホ", field: "スマホ対応", type: "number", defaultDirection: "desc" },
+  sns: { label: "SNS", field: "SNS", type: "number", defaultDirection: "desc" },
+  address: { label: "住所・科目", field: "住所", type: "text", defaultDirection: "asc" }
+};
 const tokaiAreaCenters = [
   { label: "愛知県名古屋市中区", lat: 35.1687, lng: 136.9103 },
   { label: "愛知県名古屋市千種区", lat: 35.1665, lng: 136.9466 },
@@ -986,10 +1003,74 @@ function scoreRowMatches(row, query) {
   return target.includes(query.toLowerCase());
 }
 
+function scoreSortValue(row, column) {
+  const value = row[column.field];
+  if (column.type === "number") return toFiniteNumber(value);
+  if (column.type === "grade") {
+    return { A: 5, B: 4, C: 3, D: 2, E: 1 }[String(value).trim()] || 0;
+  }
+  if (column.type === "status") {
+    return { "取得成功": 3, "取得失敗": 2, "未採点": 1 }[String(value).trim()] || 0;
+  }
+  if (column.field === "住所") return `${row["住所"] || ""} ${row["診療科目"] || ""}`;
+  return displayValue(value, "");
+}
+
+function compareScoreRows(a, b) {
+  const column = scoreSortColumns[scoreSortState.key] || scoreSortColumns.total;
+  const aValue = scoreSortValue(a, column);
+  const bValue = scoreSortValue(b, column);
+  let result = 0;
+
+  if (column.type === "number" || column.type === "grade" || column.type === "status") {
+    result = aValue - bValue;
+  } else {
+    result = String(aValue).localeCompare(String(bValue), "ja");
+  }
+
+  if (scoreSortState.direction === "desc") result *= -1;
+  if (result !== 0) return result;
+
+  const totalDiff = toFiniteNumber(b["総合点"]) - toFiniteNumber(a["総合点"]);
+  return totalDiff || String(a["施設名"]).localeCompare(String(b["施設名"]), "ja");
+}
+
+function scoreSortLabel() {
+  const column = scoreSortColumns[scoreSortState.key] || scoreSortColumns.total;
+  const direction = scoreSortState.direction === "desc"
+    ? column.type === "text" ? "降順" : "高い順"
+    : column.type === "text" ? "昇順" : "低い順";
+  return `${column.label} ${direction}`;
+}
+
+function updateScoreSortButtons() {
+  document.querySelectorAll("[data-score-sort]").forEach((button) => {
+    const isActive = button.dataset.scoreSort === scoreSortState.key;
+    button.classList.toggle("active", isActive);
+    button.dataset.sortIcon = isActive ? (scoreSortState.direction === "desc" ? "↓" : "↑") : "↕";
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+}
+
+function setScoreSort(key) {
+  const column = scoreSortColumns[key];
+  if (!column) return;
+  if (scoreSortState.key === key) {
+    scoreSortState = {
+      key,
+      direction: scoreSortState.direction === "desc" ? "asc" : "desc"
+    };
+  } else {
+    scoreSortState = { key, direction: column.defaultDirection };
+  }
+  renderScoreTable();
+}
+
 function renderScoreTable() {
   const body = document.querySelector("#score-table-body");
   const count = document.querySelector("#score-count");
   if (!body || !count) return;
+  updateScoreSortButtons();
 
   const query = document.querySelector("#score-search")?.value.trim() || "";
   const grade = document.querySelector("#score-grade-filter")?.value || "";
@@ -998,15 +1079,12 @@ function renderScoreTable() {
     .filter((row) => !grade || row["評価"] === grade)
     .filter((row) => !source || row["採点種別"] === source)
     .filter((row) => scoreRowMatches(row, query))
-    .sort((a, b) => {
-      const scoreDiff = toFiniteNumber(b["総合点"]) - toFiniteNumber(a["総合点"]);
-      return scoreDiff || String(a["施設名"]).localeCompare(String(b["施設名"]), "ja");
-    });
+    .sort(compareScoreRows);
 
-  count.textContent = `全${formatNumber(facilityScoreRows.length)}件中 ${formatNumber(filteredRows.length)}件を表示`;
+  count.textContent = `全${formatNumber(facilityScoreRows.length)}件中 ${formatNumber(filteredRows.length)}件を表示 / 並び: ${scoreSortLabel()}`;
 
   if (!filteredRows.length) {
-    body.innerHTML = `<tr><td colspan="11">該当する医院がありません。</td></tr>`;
+    body.innerHTML = `<tr><td colspan="15">該当する医院がありません。</td></tr>`;
     return;
   }
 
@@ -1023,9 +1101,13 @@ function renderScoreTable() {
         <td>${escapeHtml(displayValue(row["採点種別"], "-"))}</td>
         <td>${escapeHtml(status)}</td>
         <td>${escapeHtml(displayValue(row["デザイン性"], "-"))}</td>
+        <td>${escapeHtml(displayValue(row["わかりやすさ"], "-"))}</td>
         <td>${escapeHtml(displayValue(row["内容充実"], "-"))}</td>
-        <td>${escapeHtml(displayValue(row["スマホ対応"], "-"))}</td>
+        <td>${escapeHtml(displayValue(row["清潔感"], "-"))}</td>
+        <td>${escapeHtml(displayValue(row["読み込み速度"], "-"))}</td>
         <td>${escapeHtml(displayValue(row["SEO"], "-"))}</td>
+        <td>${escapeHtml(displayValue(row["スマホ対応"], "-"))}</td>
+        <td>${escapeHtml(displayValue(row["SNS"], "-"))}</td>
         <td>${addressMeta}</td>
         <td>${escapeHtml(compactDisplay(row["採点メモ"], 72, "メモなし"))}</td>
       </tr>
@@ -1063,7 +1145,7 @@ async function ensureBackstageReports() {
     const body = document.querySelector("#score-table-body");
     const count = document.querySelector("#score-count");
     if (count) count.textContent = "採点データを読み込めませんでした。";
-    if (body) body.innerHTML = `<tr><td colspan="11">採点データを読み込めませんでした。</td></tr>`;
+    if (body) body.innerHTML = `<tr><td colspan="15">採点データを読み込めませんでした。</td></tr>`;
   }).finally(() => {
     backstageReportsLoading = null;
   });
@@ -1977,6 +2059,9 @@ function bindEvents() {
   document.querySelector("#score-search")?.addEventListener("input", renderScoreTable);
   document.querySelector("#score-grade-filter")?.addEventListener("change", renderScoreTable);
   document.querySelector("#score-source-filter")?.addEventListener("change", renderScoreTable);
+  document.querySelectorAll("[data-score-sort]").forEach((button) => {
+    button.addEventListener("click", () => setScoreSort(button.dataset.scoreSort));
+  });
 
   document.querySelector("[data-action='use-current-location']")?.addEventListener("click", () => {
     requestCurrentLocation();

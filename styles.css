@@ -2246,7 +2246,7 @@ h1 {
 
 .score-table {
   width: 100%;
-  min-width: 1180px;
+  min-width: 1460px;
   border-collapse: collapse;
   font-size: 12.5px;
 }
@@ -2266,6 +2266,36 @@ h1 {
   background: #eff9f7;
   color: var(--teal-dark);
   font-size: 12px;
+}
+
+.score-table th button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  font-weight: 900;
+  text-align: left;
+}
+
+.score-table th button::after {
+  content: attr(data-sort-icon);
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  color: #7a9490;
+  font-size: 11px;
+}
+
+.score-table th button.active::after {
+  background: var(--teal);
+  color: white;
 }
 
 .score-table td {
