@@ -1508,6 +1508,16 @@ function setupVoiceInput() {
   recognition.maxAlternatives = 1;
   let isListening = false;
   let voiceSilenceTimer = 0;
+  let voiceBaseText = "";
+  let voiceFinalText = "";
+
+  const setVoiceButtonState = (listening) => {
+    voiceButton.classList.toggle("is-listening", listening);
+    voiceButton.setAttribute("aria-pressed", listening ? "true" : "false");
+    voiceButton.setAttribute("aria-label", listening ? "音声入力を停止" : "音声入力");
+    voiceButton.title = listening ? "停止" : "音声入力";
+    voiceButton.textContent = listening ? "停止" : "音声入力";
+  };
 
   const clearVoiceSilenceTimer = () => {
     clearTimeout(voiceSilenceTimer);
@@ -1521,31 +1531,48 @@ function setupVoiceInput() {
     }, VOICE_SILENCE_MS);
   };
 
+  setVoiceButtonState(false);
+
   recognition.addEventListener("start", () => {
     isListening = true;
-    voiceButton.classList.add("is-listening");
-    voiceButton.textContent = "聞き取り中";
+    voiceBaseText = wordInput.value.trim();
+    voiceFinalText = "";
+    setVoiceButtonState(true);
     stopAfterSilence();
   });
   recognition.addEventListener("end", () => {
     isListening = false;
     clearVoiceSilenceTimer();
-    voiceButton.classList.remove("is-listening");
-    voiceButton.textContent = "音声";
+    setVoiceButtonState(false);
     scheduleConversationUpdate(wordInput.value);
   });
   recognition.addEventListener("result", (event) => {
-    const text = [...event.results].map((result) => result[0]?.transcript || "").join("");
-    if (text) {
+    let interimText = "";
+    for (let index = event.resultIndex; index < event.results.length; index += 1) {
+      const result = event.results[index];
+      const transcript = result[0]?.transcript || "";
+      if (result.isFinal) {
+        voiceFinalText += transcript;
+      } else {
+        interimText += transcript;
+      }
+    }
+    const parts = [voiceBaseText, voiceFinalText, interimText]
+      .map((part) => part.trim())
+      .filter(Boolean);
+    const text = parts.join(" ");
+    if (text && wordInput.value !== text) {
       wordInput.value = text;
-      scheduleConversationUpdate(text);
+      wordInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (text) {
       stopAfterSilence();
     }
   });
   recognition.addEventListener("error", () => {
     isListening = false;
     clearVoiceSilenceTimer();
-    voiceButton.classList.remove("is-listening");
+    setVoiceButtonState(false);
   });
 
   voiceButton.addEventListener("click", () => {
@@ -1557,7 +1584,7 @@ function setupVoiceInput() {
     try {
       recognition.start();
     } catch {
-      voiceButton.classList.remove("is-listening");
+      setVoiceButtonState(false);
     }
   });
 }
