@@ -1053,8 +1053,8 @@ h1 {
 .department-icon-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 8px 0 12px;
+  gap: 8px;
+  margin: 10px 0 14px;
 }
 
 .department-icon-chip {
@@ -1063,16 +1063,16 @@ h1 {
   --dept-color: var(--teal-dark);
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 7px;
   min-width: 0;
   max-width: 100%;
-  min-height: 32px;
-  padding: 4px 8px 4px 5px;
+  min-height: 44px;
+  padding: 5px 10px 5px 5px;
   border: 1px solid var(--dept-border);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--dept-bg);
   color: var(--dept-color);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 900;
   line-height: 1;
   box-shadow: 0 6px 14px rgba(12, 70, 66, 0.05);
@@ -1081,10 +1081,10 @@ h1 {
 .department-symbol {
   display: grid;
   place-items: center;
-  flex: 0 0 32px;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   background:
     rgba(255, 255, 255, 0.72)
     var(--dept-icon, url("./assets/generated-ui/dept-general.png"))
@@ -1675,11 +1675,18 @@ h1 {
 }
 
 .detail-department-icons {
-  margin: 10px 0 14px;
+  gap: 9px;
+  margin: 12px 0 16px;
 }
 
 .detail-department-icons .department-icon-chip {
-  min-height: 34px;
+  min-height: 48px;
+}
+
+.detail-department-icons .department-symbol {
+  flex-basis: 46px;
+  width: 46px;
+  height: 46px;
 }
 
 .detail-card .cta-row a.generated-action {
@@ -2318,22 +2325,22 @@ h1 {
   }
 
   .department-icon-row {
-    gap: 5px;
-    margin: 7px 0 10px;
+    gap: 6px;
+    margin: 8px 0 12px;
   }
 
   .department-icon-chip {
-    min-height: 30px;
-    padding: 3px 7px 3px 4px;
-    border-radius: 9px;
-    font-size: 11px;
+    min-height: 42px;
+    padding: 4px 8px 4px 4px;
+    border-radius: 11px;
+    font-size: 11.5px;
   }
 
   .department-symbol {
-    flex-basis: 30px;
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
+    flex-basis: 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
   }
 
   .department-symbol svg {
