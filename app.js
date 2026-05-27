@@ -632,6 +632,25 @@ function updateSortControls() {
   });
 }
 
+function getDisplayVersion() {
+  const urlVersion = new URLSearchParams(window.location.search).get("v");
+  if (urlVersion) return urlVersion.slice(0, 24);
+  const appScript = [...document.scripts].find((script) => script.src.includes("app.js"));
+  if (!appScript?.src) return "local";
+  try {
+    return new URL(appScript.src).searchParams.get("v") || "local";
+  } catch {
+    return "local";
+  }
+}
+
+function updateVersionLabels() {
+  const label = `Ver ${getDisplayVersion()}`;
+  document.querySelectorAll("[data-version-label]").forEach((element) => {
+    element.textContent = label;
+  });
+}
+
 function updateLocationUi() {
   const chip = document.querySelector("#location-chip");
   const status = document.querySelector("#location-status");
@@ -1614,6 +1633,7 @@ function bindEvents() {
 }
 
 async function initApp() {
+  updateVersionLabels();
   loadLocationPrefs();
   updateLocationUi();
   renderWordBranch();
