@@ -1,0 +1,174 @@
+{
+  "generatedAt": "2026-05-27T22:09:24.778Z",
+  "source": "data/facilities.json + reports/hp_score_results.csv",
+  "facilities": {
+    "total": 10782,
+    "uniqueNames": 9851,
+    "withAddress": 10772,
+    "withPhone": 10763,
+    "withOfficialUrl": 251,
+    "withHours": 2118,
+    "withHoliday": 2006,
+    "geocoded": 9396,
+    "departmentKnown": 1794
+  },
+  "urls": {
+    "uniqueTotal": 1543,
+    "rawUniqueIryouMap": 1301,
+    "rawUniqueOfficial": 243,
+    "scoredTotal": 1543,
+    "scoredIryouMap": 1300,
+    "scoredOfficial": 243,
+    "reachable": 1102
+  },
+  "facilityScores": {
+    "scoredTotal": 10782,
+    "reachable": 8142,
+    "officialTarget": 252,
+    "iryouMapTarget": 10530,
+    "gradeCounts": {
+      "C": 1372,
+      "D": 14,
+      "A": 132,
+      "E": 9209,
+      "B": 55
+    },
+    "averageScores": {
+      "total": 29,
+      "design": 20,
+      "clarity": 18,
+      "content": 12,
+      "cleanliness": 60,
+      "speed": 72,
+      "seo": 26,
+      "mobile": 7,
+      "sns": 1
+    }
+  },
+  "careFlags": {
+    "emergency": 40,
+    "night": 73,
+    "holiday": 6
+  },
+  "qualityCounts": {
+    "高": 10763,
+    "中": 9,
+    "低": 10
+  },
+  "statusCounts": {
+    "診療時間あり": 2083,
+    "要確認": 8659,
+    "救急情報あり": 40
+  },
+  "pageTypeCounts": {
+    "検索結果": 10497,
+    "施設詳細": 253,
+    "静的HP": 32
+  },
+  "topDepartments": [
+    {
+      "department": "内科",
+      "count": 737
+    },
+    {
+      "department": "小児科",
+      "count": 403
+    },
+    {
+      "department": "小児歯科",
+      "count": 322
+    },
+    {
+      "department": "歯科",
+      "count": 268
+    },
+    {
+      "department": "外科",
+      "count": 195
+    },
+    {
+      "department": "リハビリテーション科",
+      "count": 184
+    },
+    {
+      "department": "整形外科",
+      "count": 169
+    },
+    {
+      "department": "消化器内科",
+      "count": 158
+    },
+    {
+      "department": "矯正歯科",
+      "count": 154
+    },
+    {
+      "department": "循環器内科",
+      "count": 152
+    },
+    {
+      "department": "アレルギー科",
+      "count": 148
+    },
+    {
+      "department": "一般歯科",
+      "count": 145
+    },
+    {
+      "department": "皮膚科",
+      "count": 133
+    },
+    {
+      "department": "歯科口腔外科",
+      "count": 106
+    },
+    {
+      "department": "眼科",
+      "count": 95
+    },
+    {
+      "department": "呼吸器内科",
+      "count": 88
+    },
+    {
+      "department": "耳鼻咽喉科",
+      "count": 78
+    },
+    {
+      "department": "循環器科",
+      "count": 57
+    },
+    {
+      "department": "リウマチ科",
+      "count": 56
+    },
+    {
+      "department": "糖尿病内科",
+      "count": 53
+    }
+  ],
+  "hpScores": {
+    "averageScores": {
+      "design": 38,
+      "clarity": 49,
+      "content": 34,
+      "cleanliness": 70,
+      "speed": 66,
+      "seo": 44,
+      "mobile": 27,
+      "sns": 8,
+      "total": 46
+    },
+    "gradeCounts": {
+      "C": 311,
+      "D": 14,
+      "B": 298,
+      "E": 793,
+      "A": 127
+    },
+    "sourceCounts": {
+      "iryou_map": 1300,
+      "official": 243
+    }
+  }
+}

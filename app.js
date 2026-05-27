@@ -167,6 +167,10 @@ let aiRequestSeq = 0;
 let geminiEndpointDisabled = false;
 let serverSearchDisabled = false;
 let wordBranchBound = false;
+let backstageReportsLoaded = false;
+let backstageReportsLoading = null;
+let facilityScoreRows = [];
+let facilityDataSummary = null;
 
 const RESULT_LIMIT = 5;
 const SEARCH_IDLE_DELAY_MS = 1800;
@@ -227,6 +231,12 @@ function escapeMultiline(value) {
 function displayValue(value, fallback = "未確認") {
   const text = String(value ?? "").trim();
   return text || fallback;
+}
+
+function formatNumber(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return displayValue(value);
+  return new Intl.NumberFormat("ja-JP").format(number);
 }
 
 function compactDisplay(value, maxLength = 80, fallback = "未確認") {
@@ -865,6 +875,201 @@ async function loadFacilityData() {
   } catch {
     clinics = fallbackClinics.map(normalizeFacility);
   }
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let value = "";
+  let inQuotes = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+
+    if (inQuotes) {
+      if (char === '"' && next === '"') {
+        value += '"';
+        index += 1;
+      } else if (char === '"') {
+        inQuotes = false;
+      } else {
+        value += char;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inQuotes = true;
+    } else if (char === ",") {
+      row.push(value);
+      value = "";
+    } else if (char === "\n") {
+      row.push(value);
+      rows.push(row);
+      row = [];
+      value = "";
+    } else if (char !== "\r") {
+      value += char;
+    }
+  }
+
+  if (value || row.length) {
+    row.push(value);
+    rows.push(row);
+  }
+
+  const [header = [], ...records] = rows;
+  return records
+    .filter((record) => record.some((cell) => cell !== ""))
+    .map((record) => Object.fromEntries(header.map((key, index) => [key, record[index] ?? ""])));
+}
+
+function renderMetricGrid(container, metrics) {
+  if (!container) return;
+  container.innerHTML = metrics.map((metric) => `
+    <article>
+      <span>${escapeHtml(metric.label)}</span>
+      <strong>${escapeHtml(metric.value)}</strong>
+    </article>
+  `).join("");
+}
+
+function renderFacilityDataSummary() {
+  const container = document.querySelector("#facility-data-summary");
+  if (!container || !facilityDataSummary) return;
+  const facilities = facilityDataSummary.facilities || {};
+  const urls = facilityDataSummary.urls || {};
+  const scores = facilityDataSummary.facilityScores || {};
+  const care = facilityDataSummary.careFlags || {};
+  renderMetricGrid(container, [
+    { label: "施設行数", value: `${formatNumber(facilities.total)}件` },
+    { label: "住所あり", value: `${formatNumber(facilities.withAddress)}件` },
+    { label: "診療時間あり", value: `${formatNumber(facilities.withHours)}件` },
+    { label: "緯度経度あり", value: `${formatNumber(facilities.geocoded)}件` },
+    { label: "HP採点URL", value: `${formatNumber(urls.scoredTotal)}件` },
+    { label: "医院別採点", value: `${formatNumber(scores.scoredTotal)}件` },
+    { label: "救急情報あり", value: `${formatNumber(care.emergency)}件` },
+    { label: "取得成功施設", value: `${formatNumber(scores.reachable)}件` }
+  ]);
+}
+
+function renderScoreSummary() {
+  const container = document.querySelector("#score-summary-grid");
+  if (!container || !facilityDataSummary) return;
+  const facilities = facilityDataSummary.facilities || {};
+  const scores = facilityDataSummary.facilityScores || {};
+  const averages = scores.averageScores || {};
+  const grades = scores.gradeCounts || {};
+  renderMetricGrid(container, [
+    { label: "施設行数", value: `${formatNumber(facilities.total)}件` },
+    { label: "採点済み", value: `${formatNumber(scores.scoredTotal)}件` },
+    { label: "取得成功", value: `${formatNumber(scores.reachable)}件` },
+    { label: "公式HP対象", value: `${formatNumber(scores.officialTarget)}件` },
+    { label: "平均点", value: `${formatNumber(averages.total)}点` },
+    { label: "スマホ平均", value: `${formatNumber(averages.mobile)}点` },
+    { label: "A評価", value: `${formatNumber(grades.A || 0)}件` },
+    { label: "E評価", value: `${formatNumber(grades.E || 0)}件` }
+  ]);
+}
+
+function scoreRowMatches(row, query) {
+  if (!query) return true;
+  const target = [
+    row["施設名"],
+    row["住所"],
+    row["診療科目"],
+    row["電話"],
+    row["採点メモ"],
+    row["要確認理由"]
+  ].join(" ").toLowerCase();
+  return target.includes(query.toLowerCase());
+}
+
+function renderScoreTable() {
+  const body = document.querySelector("#score-table-body");
+  const count = document.querySelector("#score-count");
+  if (!body || !count) return;
+
+  const query = document.querySelector("#score-search")?.value.trim() || "";
+  const grade = document.querySelector("#score-grade-filter")?.value || "";
+  const source = document.querySelector("#score-source-filter")?.value || "";
+  const filteredRows = facilityScoreRows
+    .filter((row) => !grade || row["評価"] === grade)
+    .filter((row) => !source || row["採点種別"] === source)
+    .filter((row) => scoreRowMatches(row, query))
+    .sort((a, b) => {
+      const scoreDiff = toFiniteNumber(b["総合点"]) - toFiniteNumber(a["総合点"]);
+      return scoreDiff || String(a["施設名"]).localeCompare(String(b["施設名"]), "ja");
+    });
+
+  count.textContent = `全${formatNumber(facilityScoreRows.length)}件中 ${formatNumber(filteredRows.length)}件を表示`;
+
+  if (!filteredRows.length) {
+    body.innerHTML = `<tr><td colspan="11">該当する医院がありません。</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = filteredRows.map((row) => {
+    const url = row["採点対象URL"];
+    const urlLink = url ? `<br><a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">採点URL</a>` : "";
+    const status = `${displayValue(row["取得可否"])}${row["HTTP状態"] ? ` / ${row["HTTP状態"]}` : ""}`;
+    const addressMeta = `${escapeHtml(compactDisplay(row["住所"], 48))}<br>${escapeHtml(compactDisplay(row["診療科目"], 56))}`;
+    return `
+      <tr>
+        <td><span class="score-name">${escapeHtml(row["施設名"])}</span><br>${escapeHtml(compactDisplay(row["電話"], 20))}${urlLink}</td>
+        <td><strong>${escapeHtml(displayValue(row["総合点"], "-"))}</strong></td>
+        <td><span class="score-grade">${escapeHtml(displayValue(row["評価"], "-"))}</span></td>
+        <td>${escapeHtml(displayValue(row["採点種別"], "-"))}</td>
+        <td>${escapeHtml(status)}</td>
+        <td>${escapeHtml(displayValue(row["デザイン性"], "-"))}</td>
+        <td>${escapeHtml(displayValue(row["内容充実"], "-"))}</td>
+        <td>${escapeHtml(displayValue(row["スマホ対応"], "-"))}</td>
+        <td>${escapeHtml(displayValue(row["SEO"], "-"))}</td>
+        <td>${addressMeta}</td>
+        <td>${escapeHtml(compactDisplay(row["採点メモ"], 72, "メモなし"))}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderBackstageReports() {
+  renderFacilityDataSummary();
+  renderScoreSummary();
+  renderScoreTable();
+}
+
+async function ensureBackstageReports() {
+  if (backstageReportsLoaded) {
+    renderBackstageReports();
+    return;
+  }
+  if (backstageReportsLoading) {
+    await backstageReportsLoading;
+    renderBackstageReports();
+    return;
+  }
+
+  backstageReportsLoading = Promise.all([
+    fetch("./reports/facility_data_summary.json?v=20260528-score-sheet-v1", { cache: "force-cache" }),
+    fetch("./reports/facility_score_sheet.csv?v=20260528-score-sheet-v1", { cache: "force-cache" })
+  ]).then(async ([summaryResponse, scoreResponse]) => {
+    if (!summaryResponse.ok || !scoreResponse.ok) throw new Error("backstage_reports_failed");
+    facilityDataSummary = await summaryResponse.json();
+    facilityScoreRows = parseCsv(await scoreResponse.text());
+    backstageReportsLoaded = true;
+  }).catch(() => {
+    document.querySelector("#facility-data-summary")?.replaceChildren();
+    const body = document.querySelector("#score-table-body");
+    const count = document.querySelector("#score-count");
+    if (count) count.textContent = "採点データを読み込めませんでした。";
+    if (body) body.innerHTML = `<tr><td colspan="11">採点データを読み込めませんでした。</td></tr>`;
+  }).finally(() => {
+    backstageReportsLoading = null;
+  });
+
+  await backstageReportsLoading;
+  renderBackstageReports();
 }
 
 function normalizeGuideFromApi(guide) {
@@ -1736,6 +1941,7 @@ function openPanel(id) {
   if (!panel) return;
   panel.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+  if (id === "backstage") ensureBackstageReports();
 }
 
 function closePanels() {
@@ -1752,6 +1958,7 @@ function activateTab(tabName) {
   document.querySelectorAll("[data-tab-panel]").forEach((panel) => {
     panel.classList.toggle("active", panel.dataset.tabPanel === tabName);
   });
+  if (tabName === "scores" || tabName === "audit") ensureBackstageReports();
 }
 
 function bindEvents() {
@@ -1766,6 +1973,10 @@ function bindEvents() {
   document.querySelectorAll("[data-tab]").forEach((button) => {
     button.addEventListener("click", () => activateTab(button.dataset.tab));
   });
+
+  document.querySelector("#score-search")?.addEventListener("input", renderScoreTable);
+  document.querySelector("#score-grade-filter")?.addEventListener("change", renderScoreTable);
+  document.querySelector("#score-source-filter")?.addEventListener("change", renderScoreTable);
 
   document.querySelector("[data-action='use-current-location']")?.addEventListener("click", () => {
     requestCurrentLocation();

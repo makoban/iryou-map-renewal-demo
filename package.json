@@ -8,10 +8,12 @@
   },
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check app.js && node --check scripts/import-facilities-to-db.mjs && node --check scripts/check-db-search.mjs && node --check scripts/geocode-facility-addresses.mjs",
+    "check": "node --check server.js && node --check app.js && node --check scripts/import-facilities-to-db.mjs && node --check scripts/check-db-search.mjs && node --check scripts/geocode-facility-addresses.mjs && node --check scripts/score-homepages.mjs && node --check scripts/build-facility-score-report.mjs",
     "db:import": "node scripts/import-facilities-to-db.mjs",
     "db:check": "node scripts/check-db-search.mjs",
-    "db:geocode": "node scripts/geocode-facility-addresses.mjs"
+    "db:geocode": "node scripts/geocode-facility-addresses.mjs",
+    "score:hp": "node scripts/score-homepages.mjs",
+    "report:facility": "node scripts/build-facility-score-report.mjs"
   },
   "dependencies": {
     "@geolonia/normalize-japanese-addresses": "^3.1.3",

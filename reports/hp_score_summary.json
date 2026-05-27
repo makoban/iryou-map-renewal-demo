@@ -1,0 +1,331 @@
+{
+  "checked_at": "2026-05-27T15:48:49.206Z",
+  "total_urls": 1543,
+  "reachable_urls": 1102,
+  "average_scores": {
+    "total": 46,
+    "design": 38,
+    "clarity": 49,
+    "content": 34,
+    "cleanliness": 70,
+    "speed": 66,
+    "seo": 44,
+    "mobile": 27,
+    "sns": 8
+  },
+  "grade_counts": {
+    "C": 311,
+    "D": 14,
+    "B": 298,
+    "E": 793,
+    "A": 127
+  },
+  "source_counts": {
+    "iryou_map": 1300,
+    "official": 243
+  },
+  "top_20": [
+    {
+      "total_score": 98,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "さんのうメディカルクリニック | 愛知県東海市 - 内科・整形外科・外科・リハビリテーション科",
+      "url": "http://sanno-medical.com/"
+    },
+    {
+      "total_score": 98,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "にん内科 | 名古屋市天白区の内科・循環器内科・訪問診療",
+      "url": "http://www.nin-clinic.com/"
+    },
+    {
+      "total_score": 98,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "扶桑町の内科・外科ならKAMIOクリニック | 扶桑 内科",
+      "url": "http://www.shinzenkai.or.jp/"
+    },
+    {
+      "total_score": 98,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "名古屋市天白区の眼科｜目に関するお悩みなら【鈴木眼科医院】",
+      "url": "http://www.suzuki-ganka.jp/"
+    },
+    {
+      "total_score": 98,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "石川橋歯科（名古屋市昭和区/桜山駅）｜ドクターズ・ファイル",
+      "url": "https://doctorsfile.jp/h/111514/"
+    },
+    {
+      "total_score": 98,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "むらせ歯科医院（名古屋市天白区/平針駅）｜ドクターズ・ファイル",
+      "url": "https://doctorsfile.jp/h/179032/"
+    },
+    {
+      "total_score": 98,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "名古屋市西区のひかり整骨院 | 土曜も営業・駐車場完備",
+      "url": "https://hikariseikotuin.net/"
+    },
+    {
+      "total_score": 98,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "安城市で内科・胃カメラ・大腸カメラ検査は神谷ファミリークリニックへ",
+      "url": "https://kamiya-clinic.com/"
+    },
+    {
+      "total_score": 98,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "安城市の歯医者｜みその歯科矯正歯科",
+      "url": "https://misono-dc.com/"
+    },
+    {
+      "total_score": 98,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "【かしょう歯科】安城市の歯科・歯医者",
+      "url": "https://www.kasho-dc.com/"
+    },
+    {
+      "total_score": 98,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "島田市 内科 循環器内科 小児科 さくらいファミリークリニック",
+      "url": "https://www.sakurai-family-clinic.com/"
+    },
+    {
+      "total_score": 97,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "名古屋でインプラント治療｜35年以上・4,000症例のかすや歯科医院",
+      "url": "http://www.kasuyashika.com/"
+    },
+    {
+      "total_score": 97,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "浄心（名古屋市西区）の歯科・歯医者ならファミリーデンタルイシダ",
+      "url": "https://fdi-dental.com/"
+    },
+    {
+      "total_score": 97,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "瀬戸市で口コミ高評価多数の接骨院│みずの坂鍼灸マッサージ整骨院 整体院｜開業18年で累計21万人が来院",
+      "url": "https://mizunozaka94.com/"
+    },
+    {
+      "total_score": 97,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "さくらい・鈴木クリニック - 稲沢市の内科・循環器科・眼科・総合内科・小児科",
+      "url": "https://sakuraisuzukicl.com/"
+    },
+    {
+      "total_score": 97,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "菅野歯科医院 | 静岡市葵区 | 歯科 | 小児歯科 | 歯周病・インプラント",
+      "url": "https://sugano-dental.net/"
+    },
+    {
+      "total_score": 97,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "四日市市 一般歯科 小児歯科 歯科口腔外科 あしたば歯科医院",
+      "url": "https://www.ashitabashika.info/"
+    },
+    {
+      "total_score": 97,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "古橋歯科医院 ｜ 名古屋市中村区の歯科医院",
+      "url": "https://www.furuhashi-dc.com/"
+    },
+    {
+      "total_score": 97,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "名古屋市南区｜歯科｜小児歯科｜歯科検診｜今井歯科",
+      "url": "https://www.imaishika-nagoya.com/"
+    },
+    {
+      "total_score": 97,
+      "grade": "A",
+      "source_kind": "official",
+      "title": "愛知県稲沢市 内科 呼吸器内科 小児科 神谷医院",
+      "url": "https://www.kamiyaiin-inazawa.com/"
+    }
+  ],
+  "bottom_20": [
+    {
+      "total_score": 9,
+      "grade": "E",
+      "source_kind": "official",
+      "title": "",
+      "url": "http://www.hayakawa-s-clinic.com/",
+      "notes": "接続/HTTP要確認:fetch failed; HTTPSではない; viewportなし; レスポンシブCSS弱い; titleなし; descriptionなし; h1なし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 11,
+      "grade": "E",
+      "source_kind": "official",
+      "title": "",
+      "url": "https://ajimasekkotsuin.com/",
+      "notes": "接続/HTTP要確認:fetch failed; viewportなし; レスポンシブCSS弱い; titleなし; descriptionなし; h1なし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 11,
+      "grade": "E",
+      "source_kind": "official",
+      "title": "",
+      "url": "https://shinohara-hari.com/",
+      "notes": "接続/HTTP要確認:fetch failed; viewportなし; レスポンシブCSS弱い; titleなし; descriptionなし; h1なし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=2",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=20",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=201",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=202",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=203",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=204",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=205",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=206",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=207",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=209",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=21",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=210",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=211",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=212",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=22",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=23",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    },
+    {
+      "total_score": 18,
+      "grade": "E",
+      "source_kind": "iryou_map",
+      "title": "503 Service Temporarily Unavailable",
+      "url": "http://www.iryou-map.co.jp/search/kamoku/step3.php?kamoku=00010&area=24",
+      "notes": "接続/HTTP要確認:503; HTTPSではない; viewportなし; レスポンシブCSS弱い; descriptionなし; 電話情報弱い; 住所/アクセス情報弱い; 診療時間情報弱い; SNSリンク未検出"
+    }
+  ]
+}

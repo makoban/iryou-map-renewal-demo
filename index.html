@@ -7,7 +7,7 @@
   <meta name="description" content="症状を伝えるだけで簡単検索。今から行ける受診先へ。東海地方専門の医療機関検索デモです。">
   <title>医療MAP 症状を伝えるだけで簡単検索</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007c78'/%3E%3Cpath d='M28 15h8v13h13v8H36v13h-8V36H15v-8h13z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css?v=20260528-transparent-hero-v1">
+  <link rel="stylesheet" href="./styles.css?v=20260528-score-sheet-v1">
 </head>
 <body>
   <header class="app-header">
@@ -28,7 +28,7 @@
     <section class="hero" id="home">
       <div class="hero-copy">
         <p class="eyebrow hero-eyebrow">
-          <img class="hero-tokai-badge" src="./assets/generated-ui/hero-tokai-specialist-badge-transparent.png" alt="東海地方専門">
+          <img class="hero-tokai-badge" src="./assets/generated-ui/hero-tokai-simple-transparent.png" alt="東海地方専門">
         </p>
         <img class="hero-lettering" src="./assets/generated-ui/hero-search-simple-v3-transparent.png" alt="症状を伝えるだけで簡単検索。今から行ける受診先へ。">
         <h1 class="visually-hidden">症状を伝えるだけで簡単検索。今から行ける受診先へ。</h1>
@@ -123,6 +123,7 @@
       <nav class="panel-tabs" aria-label="説明資料タブ">
         <button class="active" type="button" data-tab="summary">要点</button>
         <button type="button" data-tab="audit">URL監査</button>
+        <button type="button" data-tab="scores">採点シート</button>
         <button type="button" data-tab="difference">差別化</button>
         <button type="button" data-tab="location">設定</button>
         <button type="button" data-tab="migration">移行</button>
@@ -156,12 +157,78 @@
           <li>施設一覧 10,782行、診療時間_raw 4,751行、外部HP候補 486行</li>
           <li>救急対応あり 40件、夜間対応あり 73件、要確認 876件</li>
         </ul>
+        <h3>取得データ集計</h3>
+        <div class="score-metric-grid" id="facility-data-summary">
+          <article><span>施設行数</span><strong>読み込み中</strong></article>
+          <article><span>住所あり</span><strong>読み込み中</strong></article>
+          <article><span>診療時間あり</span><strong>読み込み中</strong></article>
+          <article><span>HP採点</span><strong>読み込み中</strong></article>
+        </div>
         <p class="warning">HTTPS証明書不一致は別途確認済み。フォームを扱うため、SSL移行は最優先。</p>
         <div class="report-links">
           <a href="./reports/url_check_report.html" target="_blank">HTMLレポートを見る</a>
           <a href="./reports/url_check_results.csv" download>全結果CSV</a>
           <a href="./reports/urls_from_sitemaps.csv" download>URL一覧CSV</a>
           <a href="./reports/hours_display_analysis.md" target="_blank">営業時間分析</a>
+          <a href="./reports/facility_data_summary.csv" download>施設集計CSV</a>
+          <a href="./reports/facility_score_sheet.csv" download>医院別採点CSV</a>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="scores">
+        <h3>医院別HP採点シート</h3>
+        <p>施設ごとに、公式HPまたは医療MAP内ページを採点対象としてひも付けています。点数はデザイン性、わかりやすさ、内容、清潔感、速度、SEO、スマホ対応、SNSの自動評価です。</p>
+        <div class="score-metric-grid" id="score-summary-grid">
+          <article><span>施設行数</span><strong>読み込み中</strong></article>
+          <article><span>取得成功</span><strong>読み込み中</strong></article>
+          <article><span>平均点</span><strong>読み込み中</strong></article>
+          <article><span>スマホ平均</span><strong>読み込み中</strong></article>
+        </div>
+        <div class="score-controls">
+          <label class="visually-hidden" for="score-search">採点シート検索</label>
+          <input id="score-search" type="search" autocomplete="off" placeholder="医院名・住所・科目で絞り込み">
+          <select id="score-grade-filter" aria-label="評価で絞り込み">
+            <option value="">評価すべて</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+          </select>
+          <select id="score-source-filter" aria-label="採点種別で絞り込み">
+            <option value="">種別すべて</option>
+            <option value="公式HP">公式HP</option>
+            <option value="医療MAP">医療MAP</option>
+          </select>
+        </div>
+        <p class="score-count" id="score-count">読み込み中</p>
+        <div class="score-table-wrap">
+          <table class="score-table">
+            <thead>
+              <tr>
+                <th>医院</th>
+                <th>採点</th>
+                <th>評価</th>
+                <th>種別</th>
+                <th>状態</th>
+                <th>デザイン</th>
+                <th>内容</th>
+                <th>スマホ</th>
+                <th>SEO</th>
+                <th>住所・科目</th>
+                <th>メモ</th>
+              </tr>
+            </thead>
+            <tbody id="score-table-body">
+              <tr><td colspan="11">読み込み中</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="report-links">
+          <a href="./reports/facility_score_sheet.csv" download>医院別採点CSV</a>
+          <a href="./reports/hp_score_results.csv" download>URL別採点CSV</a>
+          <a href="./reports/hp_score_summary.json" target="_blank">URL採点集計JSON</a>
+          <a href="./reports/facility_data_summary.json" target="_blank">取得データ集計JSON</a>
         </div>
       </section>
 
@@ -213,6 +280,6 @@
     <button type="button" data-open-panel="backstage">説明メニューを開く</button>
   </footer>
 
-  <script src="./app.js?v=20260527-large-input-distance-v1"></script>
+  <script src="./app.js?v=20260528-score-sheet-v1"></script>
 </body>
 </html>
