@@ -87,8 +87,22 @@ function getDbPool() {
   return dbPool;
 }
 
+function areaTokenWeight(token) {
+  if (/県$/.test(token)) return 4;
+  if (/市.+区$/.test(token)) return 26;
+  if (/[市区町村]$/.test(token)) return 18;
+  return 8;
+}
+
+function bestMatchedArea(address, areaTokens = []) {
+  const text = String(address || "");
+  return areaTokens
+    .filter((token) => text.includes(token))
+    .sort((a, b) => areaTokenWeight(b) - areaTokenWeight(a) || b.length - a.length)[0] || "";
+}
+
 function toClientFacility(row, areaTokens = []) {
-  const matchedArea = areaTokens.find((token) => String(row.address || "").includes(token)) || "";
+  const matchedArea = bestMatchedArea(row.address, areaTokens);
   const distance = matchedArea ? `${matchedArea}周辺` : row.distance_label || "距離未設定";
   return {
     id: row.id,
